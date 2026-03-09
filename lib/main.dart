@@ -1,16 +1,9 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'pages.dart';
 import 'widgets/bluetooth_button.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'services/session_data_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
-/// BLE UUIDs
-const String SERVICE_UUID = "4fafc201-1fb5-459e-8acb-c74c965c4013";
-const String DATA_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-const String CMD_UUID = "0000ff01-0000-1000-8000-00805f9b34fb";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +35,7 @@ class _MyAppState extends State<MyApp> {
   bool isBluetoothConnected = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
     return MaterialApp(
       title: 'Bitefeedback',
       theme: ThemeData(
@@ -51,130 +44,95 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text(
-                      'Bitefeedback',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      'OraStretch Companion',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 186, 221, 250),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
+            title: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                        Text(
+                          'Bitefeedback', 
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          'OraStretch Companion',
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 186, 221, 250),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
+                  ),
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: BluetoothButton(
-                  isConnected: isBluetoothConnected,
-                  onConnectionChange: (isConnected) {
-                    setState(() {
-                      isBluetoothConnected = isConnected;
-                    });
-                  },
-                  onDeviceSelected: (device) async {
-                    if (device == null) return;
-
-                    try {
-                      debugPrint("🔍 Discovering BLE services...");
-
-                      final services = await device.discoverServices();
-
-                      /// DEBUG: print everything the ESP32 exposes
-                      for (final s in services) {
-                        debugPrint("SERVICE: ${s.uuid}");
-                        for (final c in s.characteristics) {
-                          debugPrint("  CHARACTERISTIC: ${c.uuid}");
-                        }
-                      }
-
-                      BluetoothCharacteristic? dataCharacteristic;
-                      BluetoothCharacteristic? commandCharacteristic;
-
-                      for (final s in services) {
-                        final serviceUuid =
-                            s.uuid.toString().toLowerCase();
-
-                        debugPrint("SERVICE: $serviceUuid");
-
-                        if (serviceUuid == SERVICE_UUID) {
+                Expanded(
+                  flex: 1,
+                  child: BluetoothButton(
+                    isConnected: isBluetoothConnected,
+                    onConnectionChange: (isConnected) {
+                      setState(() {
+                        isBluetoothConnected = isConnected;
+                      });
+                    },
+                    onDeviceSelected: (device) async {
+                      if (device == null) return;
+                      try {
+                        final services = await device.discoverServices();
+                        BluetoothCharacteristic? chosen;
+                        for (final s in services) {
                           for (final c in s.characteristics) {
-                            final uuid =
-                                c.uuid.toString().toLowerCase();
-
-                            debugPrint("  CHAR: $uuid");
-
-                            if (uuid == DATA_UUID) {
-                              dataCharacteristic = c;
+                            if (c.properties.notify) {
+                              chosen = c;
+                              break;
                             }
-
-                            if (uuid == CMD_UUID) {
-                              commandCharacteristic = c;
+                          }
+                          if (chosen != null) break;
+                        }
+                        if (chosen == null) {
+                          for (final s in services) {
+                            if (s.characteristics.isNotEmpty) {
+                              chosen = s.characteristics.first;
+                              break;
                             }
                           }
                         }
-                      }
-
-                      if (dataCharacteristic != null &&
-                          commandCharacteristic != null) {
-                        SessionDataService().attachBleCharacteristics(
-                          dataCharacteristic,
-                          commandCharacteristic,
-                        );
-
-                        debugPrint("✅ BLE characteristics attached");
-                      } else {
-                        debugPrint("❌ Missing characteristics");
-                        debugPrint("dataCharacteristic: $dataCharacteristic");
-                        debugPrint("commandCharacteristic: $commandCharacteristic");
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Required BLE characteristics not found.',
+                        if (chosen != null) {
+                          SessionDataService().attachBleCharacteristic(chosen);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('No notifiable characteristic found on device.'),
+                              duration: Duration(seconds: 3),
                             ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error discovering characteristics: ${e.toString()}'),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
-                    } catch (e) {
-                      debugPrint("BLE discovery error: $e");
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Error discovering characteristics: ${e.toString()}',
-                          ),
-                        ),
-                      );
-                    }
-                  },
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            backgroundColor: Colors.blue,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(16),
+              child: Container(),
+            )
           ),
-          backgroundColor: Colors.blue,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(16),
-            child: Container(),
-          ),
-        ),
         body: MyPage(isBluetoothConnected: isBluetoothConnected),
       ),
     );
@@ -186,7 +144,11 @@ class PageItem {
   final String title;
   final Widget Function() builder;
 
-  PageItem({required this.id, required this.title, required this.builder});
+  PageItem({
+    required this.id,
+    required this.title,
+    required this.builder,
+  });
 }
 
 class PageNavigation extends StatefulWidget {
@@ -213,7 +175,9 @@ class _PageNavigationState extends State<PageNavigation> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFBFDBFE))),
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFBFDBFE)),
+        ),
       ),
       child: SingleChildScrollView(
         controller: _scrollController,
@@ -225,10 +189,7 @@ class _PageNavigationState extends State<PageNavigation> {
             return TextButton(
               onPressed: () => widget.onPageChange(index),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 backgroundColor: isActive
                     ? const Color(0xFFEFF6FF)
                     : Colors.transparent,

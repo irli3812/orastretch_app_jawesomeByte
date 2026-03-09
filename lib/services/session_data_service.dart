@@ -200,7 +200,7 @@ static const _biteMaxSeriesKey = 'bite_force_max_series';
   Future<void> start() async {
     debugPrint('🟢 start() called');
 
-    if (_commandCharacteristic == null) {
+    /*if (_commandCharacteristic == null) {
       debugPrint('❌ Cannot start — command characteristic missing');
       return;
     }
@@ -208,7 +208,7 @@ static const _biteMaxSeriesKey = 'bite_force_max_series';
     await _commandCharacteristic!.write(
       utf8.encode("RESET"),
       withoutResponse: true,
-    );
+    );*/
 
     _box.put('is_recording', true);
 
