@@ -48,7 +48,7 @@ static const _biteMaxSeriesKey = 'bite_force_max_series';
 
   /// BLE
   BluetoothCharacteristic? _dataCharacteristic;
-  BluetoothCharacteristic? _commandCharacteristic;
+  //BluetoothCharacteristic? _commandCharacteristic;
 
   StreamSubscription<List<int>>? _bleSub;
 
@@ -81,14 +81,14 @@ static const _biteMaxSeriesKey = 'bite_force_max_series';
   /// ─────────────────────────────────────────────
   void attachBleCharacteristics(
   BluetoothCharacteristic dataCharacteristic,
-  BluetoothCharacteristic commandCharacteristic,
+  //BluetoothCharacteristic commandCharacteristic,
 ) {
   _dataCharacteristic = dataCharacteristic;
-  _commandCharacteristic = commandCharacteristic;
+  /*_commandCharacteristic = commandCharacteristic;*/
 
   debugPrint('🔵 BLE characteristics attached');
-  debugPrint('DATA UUID: ${_dataCharacteristic?.uuid}');
-  debugPrint('CMD  UUID: ${_commandCharacteristic?.uuid}');
+  //debugPrint('DATA UUID: ${_dataCharacteristic?.uuid}');
+  /*debugPrint('CMD  UUID: ${_commandCharacteristic?.uuid}');*/
 
   _bleSub?.cancel();
 
@@ -205,16 +205,11 @@ static const _biteMaxSeriesKey = 'bite_force_max_series';
       return;
     }
 
-    //print("Sending RESET to ESP32");
-
     await _commandCharacteristic!.write(
       utf8.encode("RESET"),
       withoutResponse: true,
     );
 
-    _firstDeviceMillis = null;
-
-    _box.put('session', []);
     _box.put('is_recording', true);
 
     notifyListeners();
