@@ -19,7 +19,6 @@ class RecordBiteForce extends StatefulWidget {
 }
 
 class _RecordBiteForceState extends State<RecordBiteForce> {
-
   int? _lastResetSignal;
   int? _lastStartSignal;
   ViewMode _viewMode = ViewMode.spatial;
@@ -101,17 +100,14 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                         _lastStartSignal = startSignal;
                       }
 
-                      final List currentSeries = box.get(
-                        'bite_forces_current_series',
-                        defaultValue: [],
-                      );
-
                       final List avgSeries = box.get(
                         'bite_force_avg_series',
                         defaultValue: [],
                       );
 
-                      final avg = avgSeries.isEmpty? 0.0 : (avgSeries.last as num).toDouble();
+                      final avg = avgSeries.isEmpty
+                          ? 0.0
+                          : (avgSeries.last as num).toDouble();
 
                       return SizedBox.expand(
                         child: CustomPaint(
@@ -139,8 +135,14 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
 
           // ===== METRICS =====
           ValueListenableBuilder(
+            // rebuild when the underlying series update or control signals change
             valueListenable: box.listenable(
-              keys: ['avg_bite_force', 'resetSignal', 'startSignal'],
+              keys: [
+                'bite_force_avg_series',
+                'bite_force_max_series',
+                'resetSignal',
+                'startSignal',
+              ],
             ),
             builder: (context, _, __) {
               final int? resetSignal = box.get('resetSignal');
@@ -153,19 +155,26 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               if (startSignal != null && startSignal != _lastStartSignal) {
                 _lastStartSignal = startSignal;
               }
-              final List currentSeries = box.get( // use later for time series plots
-                'bite_forces_current_series',
-                defaultValue: [],
-              );
-
+              // the average series holds the per‑sample averages coming from BLE
               final List avgSeries = box.get(
                 'bite_force_avg_series',
                 defaultValue: [],
               );
 
-              final avg = avgSeries.isNotEmpty
+              // "latest" should reflect the most recent averaged value
+              final double latest = avgSeries.isNotEmpty
                   ? (avgSeries.last as num).toDouble()
                   : 0.0;
+
+              // compute an overall average of all entries in the avgSeries
+              double avg = 0.0;
+              if (avgSeries.isNotEmpty) {
+                final sum = avgSeries.fold<double>(
+                  0.0,
+                  (p, e) => p + (e as num).toDouble(),
+                );
+                avg = sum / avgSeries.length;
+              }
 
               final List maxSeries = box.get(
                 'bite_force_max_series',
@@ -176,10 +185,6 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               if (maxSeries.isNotEmpty) {
                 max = (maxSeries.last as num).toDouble();
               }
-
-              final latest = currentSeries.isNotEmpty
-                  ? (currentSeries.last as num).toDouble()
-                  : 0.0;
 
               return Column(
                 children: [
