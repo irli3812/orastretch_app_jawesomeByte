@@ -44,14 +44,16 @@ class TsBiteForce extends StatelessWidget {
           allPoints.add(Offset(time.toDouble(), b1));
         }
 
-        final double latestTime =
-            allPoints.isNotEmpty ? allPoints.last.dx : 0;
+        final double latestTime = allPoints.isNotEmpty ? allPoints.last.dx : 0;
 
-        final double minTime =
-            (latestTime - windowMs).clamp(0, double.infinity);
+        final double minTime = (latestTime - windowMs).clamp(
+          0,
+          double.infinity,
+        );
 
-        final List<Offset> points =
-            allPoints.where((p) => p.dx >= minTime).toList();
+        final List<Offset> points = allPoints
+            .where((p) => p.dx >= minTime)
+            .toList();
 
         return CustomPaint(
           painter: _TsBiteForcePainter(
@@ -110,11 +112,7 @@ class _TsBiteForcePainter extends CustomPainter {
       axisPaint,
     );
 
-    canvas.drawLine(
-      origin,
-      Offset(origin.dx, topPad),
-      axisPaint,
-    );
+    canvas.drawLine(origin, Offset(origin.dx, topPad), axisPaint);
 
     /// X GRID + LABELS (every 0.5 seconds)
 
@@ -129,11 +127,7 @@ class _TsBiteForcePainter extends CustomPainter {
 
       final double x = origin.dx + norm * width;
 
-      canvas.drawLine(
-        Offset(x, origin.dy),
-        Offset(x, topPad),
-        gridPaint,
-      );
+      canvas.drawLine(Offset(x, origin.dy), Offset(x, topPad), gridPaint);
 
       final tp = TextPainter(
         text: TextSpan(
@@ -146,6 +140,20 @@ class _TsBiteForcePainter extends CustomPainter {
       tp.paint(canvas, Offset(x - tp.width / 2, origin.dy + 4));
     }
 
+    // draw x-axis title
+    const String xLabel = 'Time (s)';
+    final TextPainter xTp = TextPainter(
+      text: const TextSpan(
+        text: xLabel,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    xTp.paint(
+      canvas,
+      Offset(origin.dx + width / 2 - xTp.width / 2, origin.dy + 20),
+    );
+
     /// Y GRID + LABELS (every 10 units)
 
     const double stepForce = 10;
@@ -153,8 +161,7 @@ class _TsBiteForcePainter extends CustomPainter {
     double firstYTick = (bfGaugeMin / stepForce).ceil() * stepForce;
 
     for (double v = firstYTick; v <= bfGaugeMax; v += stepForce) {
-      final double norm =
-          (v - bfGaugeMin) / (bfGaugeMax - bfGaugeMin);
+      final double norm = (v - bfGaugeMin) / (bfGaugeMax - bfGaugeMin);
 
       final double y = origin.dy - norm * height;
 
@@ -175,6 +182,23 @@ class _TsBiteForcePainter extends CustomPainter {
       tp.paint(canvas, Offset(4, y - tp.height / 2));
     }
 
+    // draw y-axis title
+    const String yLabel = 'Force (N)';
+    final TextPainter yTp = TextPainter(
+      text: const TextSpan(
+        text: yLabel,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    canvas.save();
+    // position at vertical center left of axis
+    canvas.translate(leftPad / 2, origin.dy - height / 2);
+    canvas.rotate(-3.14159 / 2);
+    yTp.paint(canvas, Offset(-yTp.width / 2, -yTp.height / 2));
+    canvas.restore();
+
     /// SCALE FUNCTION
 
     Offset scalePoint(Offset p) {
@@ -183,7 +207,7 @@ class _TsBiteForcePainter extends CustomPainter {
 
       final double y =
           origin.dy -
-              ((p.dy - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)) * height;
+          ((p.dy - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)) * height;
 
       return Offset(x, y);
     }
