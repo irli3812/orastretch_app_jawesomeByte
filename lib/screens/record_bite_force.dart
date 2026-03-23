@@ -232,7 +232,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'pound-force(s)',
+                    'Newtons',
                     style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                   ),
                 ],
@@ -245,7 +245,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
   }
 }
 
-/// ===== Semi-circle gauge painter (0–150 lbf) =====
+/// ===== Semi-circle gauge painter (0–150 N) =====
 class _BiteForceGaugePainter extends CustomPainter {
   final double value;
 
@@ -289,7 +289,7 @@ class _BiteForceGaugePainter extends CustomPainter {
       arcPaint,
     );
 
-    // ===== Tick marks & labels (every 10 lbf) =====
+    // ===== Tick marks & labels (every 10 N) =====
     final tickPaint = Paint()
       ..color = Colors.black
       ..strokeWidth = 2;

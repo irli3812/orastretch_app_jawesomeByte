@@ -15,11 +15,10 @@ class SpatialBiteForce extends StatelessWidget {
       children: [
         const SizedBox(height: 12),
 
-        // ===== Title =====
         const Text(
           'Colored Force-Map',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -27,14 +26,14 @@ class SpatialBiteForce extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // ===== FORCE MAP =====
         ValueListenableBuilder(
           valueListenable: box.listenable(keys: ['session']),
           builder: (context, Box box, _) {
-            final List session =
-                List.from(box.get('session', defaultValue: []));
+            final List session = List.from(
+              box.get('session', defaultValue: []),
+            );
 
-            final List<double> sensorValues = List.generate(10, (i) {
+            final List<double> values = List.generate(20, (i) {
               if (session.isEmpty) return 0.0;
 
               final row = session.last;
@@ -44,99 +43,29 @@ class SpatialBiteForce extends StatelessWidget {
                 bites = List.from(row['bites']);
               }
 
-              final int s = i + 1;
-
-              double v1 = 0;
-              double v2 = 0;
-
-              if (bites.length > (s - 1)) {
-                v1 = (bites[s - 1] as num).toDouble();
+              if (bites.length > i) {
+                return (bites[i] as num).toDouble();
               }
 
-              if (bites.length > (s + 9)) {
-                v2 = (bites[s + 9] as num).toDouble();
-              }
-
-              return (v1 + v2) / 2.0;
+              return 0.0;
             });
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                children: List.generate(10, (i) {
-                  final value = sensorValues[i];
-                  final color = _valueToColor(value);
+            return Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // ===== TOP ARCH (1–10) =====
+                  _buildArch(values.sublist(0, 10), isTop: true),
 
-                  /*final textColor =
-                      ThemeData.estimateBrightnessForColor(color) ==
-                              Brightness.dark
-                          ? Colors.white
-                          : Colors.black;*/
-                  final textColor = Colors.white;
-
-                  return Expanded(
-                    child: TweenAnimationBuilder<Color?>(
-                      tween: ColorTween(
-                        begin: Colors.grey.shade300,
-                        end: color,
-                      ),
-                      duration: const Duration(milliseconds: 300),
-                      builder: (context, animatedColor, _) {
-                        return Container(
-                          height: 100,
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          decoration: BoxDecoration(
-                            color: animatedColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // ===== SENSOR LABEL =====
-                              Text(
-                                '${i + 1}',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-
-                              // ===== VALUE =====
-                              Text(
-                                value.toStringAsFixed(0),
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-
-                              const SizedBox(height: 2),
-
-                              // ===== UNIT =====
-                              Text(
-                                'lbf',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: textColor.withOpacity(0.8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }),
+                  // ===== BOTTOM ARCH (11–20) =====
+                  _buildArch(values.sublist(10, 20), isTop: false),
+                ],
               ),
             );
           },
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
 
         // ===== COLOR LEGEND =====
         Padding(
@@ -148,17 +77,11 @@ class SpatialBiteForce extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   gradient: const LinearGradient(
-                    colors: [
-                      Colors.blue,
-                      Colors.orange,
-                      Colors.green,
-                    ],
+                    colors: [Colors.blue, Colors.orange, Colors.green],
                   ),
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -171,7 +94,7 @@ class SpatialBiteForce extends StatelessWidget {
                     style: const TextStyle(fontSize: 18),
                   ),
                   Text(
-                    '${bfGaugeMax.toStringAsFixed(0)} lbf',
+                    '${bfGaugeMax.toStringAsFixed(0)} N',
                     style: const TextStyle(fontSize: 18),
                   ),
                 ],
@@ -180,27 +103,105 @@ class SpatialBiteForce extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 24),
-
-        // ===== TEETH IMAGE =====
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Image.asset(
-              'lib/images/b&w_teeth_anatomy.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
+        const SizedBox(height: 12),
       ],
     );
   }
 
-  /// ===== Color scale =====
+  // ===== ARCH BUILDER =====
+  Widget _buildArch(List<double> vals, {required bool isTop}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
+        children: List.generate(vals.length, (i) {
+          // Create curvature by vertical offset
+          final index = i;
+          final mid = (vals.length - 1) / 2;
+          final curve = (index - mid).abs();
+
+          final verticalOffset = curve * 8; // (isTop ? 4 : 4); // multiplier increase makes curve more pronounced
+
+          return Padding(
+            padding: EdgeInsets.only(
+              top: isTop ? verticalOffset : 0,
+              bottom: isTop ? 0 : verticalOffset,
+            ),
+            child: _buildBox(i, vals[i], isTop),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ===== SINGLE SENSOR BOX =====
+  Widget _buildBox(int index, double value, bool isTop) {
+    final sensorNumber = isTop ? index + 1 : index + 11;
+
+    final color = _valueToColor(value);
+    const textColor = Colors.white;
+
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(begin: Colors.grey.shade300, end: color),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, animatedColor, _) {
+        return Container(
+          width: 65,
+          height: 95,
+          decoration: BoxDecoration(
+            color: animatedColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // SENSOR #
+              Text(
+                '$sensorNumber',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              // VALUE
+              Text(
+                value.toStringAsFixed(0),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+
+              const SizedBox(height: 2),
+
+              // UNIT
+              Text(
+                'N',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textColor.withOpacity(0.85),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ===== COLOR SCALE =====
   Color _valueToColor(double value) {
-    final normalized =
-        ((value - bfGaugeMin) / (bfGaugeMax - bfGaugeMin))
-            .clamp(0.0, 1.0);
+    final normalized = ((value - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)).clamp(
+      0.0,
+      1.0,
+    );
 
     if (normalized < 0.5) {
       final t = normalized / 0.5;

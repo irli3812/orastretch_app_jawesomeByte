@@ -110,7 +110,7 @@ class _BLEdataState extends State<BLEdata> {
 
                       Expanded(
                         child: Text(
-                          'B1 (lbf)',
+                          'B1 (N)',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
