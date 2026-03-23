@@ -40,6 +40,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                           selectedColor: color.withOpacity(0.6),
                           backgroundColor: color.withOpacity(0.2),
                           labelStyle: TextStyle(
+                            fontSize: 16,
                             color: selectedSensors.contains(s)
                                 ? Colors.white
                                 : Colors.black,
@@ -76,7 +77,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Close"),
+                  child: const Text("Close", style: TextStyle(fontSize: 16)),
                 ),
               ],
             );
@@ -92,7 +93,6 @@ class _TsBiteForceState extends State<TsBiteForce> {
 
     return Column(
       children: [
-        // Button
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Align(
@@ -100,8 +100,10 @@ class _TsBiteForceState extends State<TsBiteForce> {
             child: ElevatedButton(
               onPressed: _openSensorSelector,
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -111,20 +113,19 @@ class _TsBiteForceState extends State<TsBiteForce> {
                     height: 24,
                   ),
                   const SizedBox(width: 8),
-                  const Text("Select Sensor Pair(s)"),
+                  const Text(
+                    "Select Sensor Pair(s)",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
           ),
         ),
 
-        // ✅ Legend at top-left, horizontal
         ValueListenableBuilder(
           valueListenable: box.listenable(keys: ['session']),
           builder: (context, Box box, _) {
-            final List session =
-                List.from(box.get('session', defaultValue: []));
-
             final Set<int> activeSensors = selectedSensors;
 
             return Padding(
@@ -141,11 +142,17 @@ class _TsBiteForceState extends State<TsBiteForce> {
                         Container(
                           width: 20,
                           height: 3,
-                          color: _SimplePainter.colors[
-                              (s - 1) % _SimplePainter.colors.length],
+                          color: _SimplePainter
+                              .colors[(s - 1) % _SimplePainter.colors.length],
                         ),
                         const SizedBox(width: 4),
-                        Text("$s"),
+                        Text(
+                          "$s",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     );
                   }).toList(),
@@ -155,13 +162,15 @@ class _TsBiteForceState extends State<TsBiteForce> {
           },
         ),
 
-        // Plot
+        const SizedBox(height: 12), // ✅ space between legend and plot
+
         Expanded(
           child: ValueListenableBuilder(
             valueListenable: box.listenable(keys: ['session']),
             builder: (context, Box box, _) {
-              final List session =
-                  List.from(box.get('session', defaultValue: []));
+              final List session = List.from(
+                box.get('session', defaultValue: []),
+              );
 
               if (session.isEmpty) {
                 return const Center(child: Text("Waiting for data..."));
@@ -200,8 +209,10 @@ class _TsBiteForceState extends State<TsBiteForce> {
                   ? sensorPoints[1]!.last.dx
                   : 0;
 
-              final double minTime =
-                  (latestTime - TsBiteForce.windowMs).clamp(0, double.infinity);
+              final double minTime = (latestTime - TsBiteForce.windowMs).clamp(
+                0,
+                double.infinity,
+              );
 
               final Map<int, List<Offset>> filtered = {};
 
@@ -245,10 +256,10 @@ class _SimplePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const double bottomPad = 30;
+    const double bottomPad = 70; // more for rotated ticks
     final double height = size.height - bottomPad;
 
-    const double leftPad = 90;
+    const double leftPad = 130;
     final double width = size.width - leftPad - 10;
 
     final bgPaint = Paint()..color = Colors.white;
@@ -260,12 +271,13 @@ class _SimplePainter extends CustomPainter {
 
     canvas.drawLine(Offset(leftPad, 0), Offset(leftPad, height), axisPaint);
     canvas.drawLine(
-        Offset(leftPad, height), Offset(size.width, height), axisPaint);
+      Offset(leftPad, height),
+      Offset(size.width, height),
+      axisPaint,
+    );
 
-    final timeRange =
-        (maxTime - minTime).abs() < 1 ? 1 : (maxTime - minTime);
+    final timeRange = (maxTime - minTime).abs() < 1 ? 1 : (maxTime - minTime);
 
-    // X ticks
     const int xTicks = 5;
     for (int i = 0; i <= xTicks; i++) {
       final t = minTime + (i / xTicks) * timeRange;
@@ -276,19 +288,21 @@ class _SimplePainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: (t / 1000).toStringAsFixed(3),
-          style: const TextStyle(fontSize: 10, color: Colors.black),
+          style: const TextStyle(fontSize: 16, color: Colors.black),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
 
-      tp.paint(canvas, Offset(x - 10, height + 2));
+      canvas.save();
+      canvas.translate(x, height + 5);
+      canvas.rotate(-0.6);
+      tp.paint(canvas, Offset(-tp.width, 0));
+      canvas.restore();
     }
 
-    // Y ticks
     const int yTicks = 5;
     for (int i = 0; i <= yTicks; i++) {
-      final v =
-          bfGaugeMin + (i / yTicks) * (bfGaugeMax - bfGaugeMin);
+      final v = bfGaugeMin + (i / yTicks) * (bfGaugeMax - bfGaugeMin);
       final y = height - (i / yTicks) * height;
 
       canvas.drawLine(Offset(leftPad, y), Offset(leftPad + 5, y), axisPaint);
@@ -296,38 +310,44 @@ class _SimplePainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: v.toStringAsFixed(0),
-          style: const TextStyle(fontSize: 10, color: Colors.black),
+          style: const TextStyle(fontSize: 16, color: Colors.black),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
 
-      tp.paint(canvas, Offset(40, y - 6));
+      tp.paint(canvas, Offset(50, y - 10));
     }
 
-    // X label
     final xLabel = TextPainter(
       text: const TextSpan(
         text: "Time (s)",
-        style: TextStyle(color: Colors.black, fontSize: 12),
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    xLabel.paint(canvas, Offset(leftPad + width / 2 - 40, height + 18));
+    xLabel.paint(canvas, Offset(leftPad + width / 2 - 60, height + 40));
 
-    // Y label
     final yLabel = TextPainter(
       text: const TextSpan(
         text: "Average bite force of aligned sensors (Newtons)",
-        style: TextStyle(color: Colors.black, fontSize: 12),
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
     canvas.save();
-    canvas.translate(5, height / 2 + 50);
+    canvas.translate(10, height / 2);
     canvas.rotate(-3.14159 / 2);
-    yLabel.paint(canvas, Offset(0, 0));
+    yLabel.paint(canvas, Offset(-yLabel.width / 2, 0)); // centered
     canvas.restore();
 
     Offset scale(Offset p) {
