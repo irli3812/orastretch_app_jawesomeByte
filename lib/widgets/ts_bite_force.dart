@@ -275,7 +275,7 @@ class _SimplePainter extends CustomPainter {
 
       final tp = TextPainter(
         text: TextSpan(
-          text: t.toStringAsFixed(0),
+          text: (t / 1000).toStringAsFixed(3),
           style: const TextStyle(fontSize: 10, color: Colors.black),
         ),
         textDirection: TextDirection.ltr,
@@ -307,7 +307,7 @@ class _SimplePainter extends CustomPainter {
     // X label
     final xLabel = TextPainter(
       text: const TextSpan(
-        text: "Time (ms)",
+        text: "Time (s)",
         style: TextStyle(color: Colors.black, fontSize: 12),
       ),
       textDirection: TextDirection.ltr,
