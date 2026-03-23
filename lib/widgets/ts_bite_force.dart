@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_underscores
+// ignore_for_file: unnecessary_underscores, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -20,29 +20,48 @@ class _TsBiteForceState extends State<TsBiteForce> {
     showDialog(
       context: context,
       builder: (_) {
-        return AlertDialog(
-          title: const Text("Select Sensors"),
-          content: Wrap(
-            spacing: 8,
-            children: List.generate(10, (i) {
-              final s = i + 1;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Select Sensor Pair(s)"),
+              content: Wrap(
+                spacing: 8,
+                children: List.generate(10, (i) {
+                  final s = i + 1;
+                  final color = _SimplePainter.colors[i];
 
-              return FilterChip(
-                label: Text("S$s"),
-                selected: selectedSensors.contains(s),
-                onSelected: (_) {
-                  setState(() {
-                    if (selectedSensors.contains(s)) {
-                      selectedSensors.remove(s);
-                    } else {
-                      selectedSensors.add(s);
-                    }
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            }),
-          ),
+                  return FilterChip(
+                    label: Text("$s"), // ✅ removed "S"
+                    selected: selectedSensors.contains(s),
+
+                    selectedColor: color.withOpacity(0.6),
+                    backgroundColor: color.withOpacity(0.2),
+
+                    labelStyle: TextStyle(
+                      color: selectedSensors.contains(s)
+                          ? Colors.white
+                          : Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+
+                    side: BorderSide(color: color, width: 2),
+
+                    onSelected: (_) {
+                      setState(() {
+                        if (selectedSensors.contains(s)) {
+                          selectedSensors.remove(s);
+                        } else {
+                          selectedSensors.add(s);
+                        }
+                      });
+
+                      setDialogState(() {}); // ✅ keeps dialog open & updates UI
+                    },
+                  );
+                }),
+              ),
+            );
+          },
         );
       },
     );
@@ -139,16 +158,16 @@ class _SimplePainter extends CustomPainter {
   _SimplePainter(this.data, this.minTime, this.maxTime);
 
   static const List<Color> colors = [
-    Colors.blue,
-    Colors.red,
-    Colors.green,
-    Colors.purple,
-    Colors.orange,
-    Colors.teal,
-    Colors.brown,
-    Colors.indigo,
-    Colors.pink,
-    Colors.cyan,
+    Color(0xFF0072B2), // blue
+    Color(0xFFD55E00), // vermillion
+    Color(0xFF009E73), // green
+    Color(0xFFCC79A7), // purple
+    Color(0xFFE69F00), // orange
+    Color(0xFF56B4E9), // light blue
+    Color(0xFF000000), // black
+    Color(0xFFF0E442), // yellow
+    Color(0xFF999999), // gray
+    Color(0xFF882255), // dark red
   ];
 
   @override
@@ -171,8 +190,10 @@ class _SimplePainter extends CustomPainter {
 
     // Draw lines
     for (final entry in data.entries) {
+      final s = entry.key;
+
       final paint = Paint()
-        ..color = colors[i % colors.length]
+        ..color = colors[(s - 1) % colors.length]
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke;
 
@@ -193,7 +214,6 @@ class _SimplePainter extends CustomPainter {
     }
 
     // ✅ Bottom-right legend
-    // ✅ Bottom-right legend (correctly anchored)
     const double rowHeight = 18;
     const double bottomPad = 10;
 
@@ -208,14 +228,14 @@ class _SimplePainter extends CustomPainter {
 
     for (final s in data.keys.toList().reversed) {
       final paint = Paint()
-        ..color = colors[i % colors.length]
+        ..color = colors[(s - 1) % colors.length]
         ..strokeWidth = 3;
 
       canvas.drawLine(Offset(xLineStart, y), Offset(xLineEnd, y), paint);
 
       final tp = TextPainter(
         text: TextSpan(
-          text: "S$s",
+          text: "$s",
           style: const TextStyle(fontSize: 12, color: Colors.black),
         ),
         textDirection: TextDirection.ltr,
