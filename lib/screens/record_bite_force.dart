@@ -81,9 +81,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                 ? ValueListenableBuilder(
                     valueListenable: box.listenable(
                       keys: [
-                        'bite_force_avg_series',
-                        'bite_force_max_series',
-                        'resetSignal',
+                        'session',
                         'startSignal',
                       ],
                     ),
@@ -134,6 +132,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
             // rebuild when the underlying series update or control signals change
             valueListenable: box.listenable(
               keys: [
+                'session',
                 'bite_force_avg_series',
                 'bite_force_max_series',
                 'resetSignal',
