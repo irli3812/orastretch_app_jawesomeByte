@@ -24,41 +24,54 @@ class _TsBiteForceState extends State<TsBiteForce> {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: const Text("Select Sensor Pair(s)"),
-              content: Wrap(
-                spacing: 8,
-                children: List.generate(10, (i) {
-                  final s = i + 1;
-                  final color = _SimplePainter.colors[i];
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    children: List.generate(10, (i) {
+                      final s = i + 1;
+                      final color = _SimplePainter.colors[i];
 
-                  return FilterChip(
-                    label: Text("$s"), // ✅ removed "S"
-                    selected: selectedSensors.contains(s),
+                      return FilterChip(
+                        label: Text("$s"),
+                        selected: selectedSensors.contains(s),
+                        selectedColor: color.withOpacity(0.6),
+                        backgroundColor: color.withOpacity(0.2),
+                        labelStyle: TextStyle(
+                          color: selectedSensors.contains(s)
+                              ? Colors.white
+                              : Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        side: BorderSide(color: color, width: 2),
+                        onSelected: (_) {
+                          setState(() {
+                            if (selectedSensors.contains(s)) {
+                              selectedSensors.remove(s);
+                            } else {
+                              selectedSensors.add(s);
+                            }
+                          });
+                          setDialogState(() {});
+                        },
+                      );
+                    }),
+                  ),
 
-                    selectedColor: color.withOpacity(0.6),
-                    backgroundColor: color.withOpacity(0.2),
+                  const SizedBox(height: 16),
 
-                    labelStyle: TextStyle(
-                      color: selectedSensors.contains(s)
-                          ? Colors.white
-                          : Colors.black,
-                      fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Image.asset(
+                        'lib/images/teeth_anatomy_transparent_png.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
-
-                    side: BorderSide(color: color, width: 2),
-
-                    onSelected: (_) {
-                      setState(() {
-                        if (selectedSensors.contains(s)) {
-                          selectedSensors.remove(s);
-                        } else {
-                          selectedSensors.add(s);
-                        }
-                      });
-
-                      setDialogState(() {}); // ✅ keeps dialog open & updates UI
-                    },
-                  );
-                }),
+                  ),
+                ],
               ),
 
               actions: [
@@ -66,7 +79,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text("Close"),
                 ),
-              ]
+              ],
             );
           },
         );
@@ -149,7 +162,20 @@ class _TsBiteForceState extends State<TsBiteForce> {
           right: 10,
           child: ElevatedButton(
             onPressed: _openSensorSelector,
-            child: const Text("Select Sensor Pair(s)"),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'lib/images/teeth_anatomy_transparent_png.png',
+                  height: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text("Select Sensor Pair(s)"),
+              ],
+            ),
           ),
         ),
       ],
@@ -192,7 +218,6 @@ class _SimplePainter extends CustomPainter {
 
       return Offset(x, y);
     }
-
 
     // Draw lines
     for (final entry in data.entries) {
