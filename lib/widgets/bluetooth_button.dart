@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
 
 class BluetoothButton extends StatelessWidget {
   final bool isConnected;
@@ -65,12 +68,10 @@ class BluetoothButton extends StatelessWidget {
 }
 
 class DeviceSelectionDialog extends StatefulWidget {
-  final void Function(bool connected, BluetoothDevice? device) onDeviceConnected;
+  final void Function(bool connected, BluetoothDevice? device)
+  onDeviceConnected;
 
-  const DeviceSelectionDialog({
-    super.key,
-    required this.onDeviceConnected,
-  });
+  const DeviceSelectionDialog({super.key, required this.onDeviceConnected});
 
   @override
   State<DeviceSelectionDialog> createState() => _DeviceSelectionDialogState();
@@ -83,6 +84,7 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
   String? _connectingDeviceId;
   String? _errorMessage;
 
+  BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
   StreamSubscription<BluetoothAdapterState>? _adapterSubscription;
   StreamSubscription<List<ScanResult>>? _scanSubscription;
 
@@ -95,26 +97,96 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
 
   void _listenToAdapterState() {
     _adapterSubscription = FlutterBluePlus.adapterState.listen((state) {
-      if (mounted) {
-        if (state != BluetoothAdapterState.on) {
-          setState(() {
-            _errorMessage =
-                'Bluetooth is ${state.name.toUpperCase()}. Please turn it ON.';
-          });
-        } else {
-          setState(() {
-            _errorMessage = null;
-          });
+      _adapterState = state;
+      if (!mounted) return;
+
+      if (state != BluetoothAdapterState.on) {
+        setState(() {
+          _errorMessage =
+              'Bluetooth is ${state.name.toUpperCase()}. Please turn it ON.';
+          _isScanning = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = null;
+        });
+
+        // If we just became poweredOn, try scanning again.
+        if (!_isScanning) {
+          _startScan();
         }
       }
     });
+  }
+
+  Future<bool> _ensurePermissions() async {
+    final List<Permission> requestList = [];
+
+    if (Platform.isIOS) {
+      requestList.addAll([
+        Permission.bluetooth,
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+      ]);
+    }
+
+    if (Platform.isAndroid) {
+      requestList.addAll([
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.locationWhenInUse,
+      ]);
+    }
+
+    if (requestList.isEmpty) return true;
+
+    final statuses = await requestList.request();
+
+    final denied = statuses.entries.where((entry) => !entry.value.isGranted);
+    if (denied.isNotEmpty) {
+      setState(() {
+        _errorMessage =
+            'Please grant Bluetooth permissions in device Settings.';
+      });
+      return false;
+    }
+
+    return true;
   }
 
   void _startScan() async {
     setState(() {
       _isScanning = true;
       _devicesFound.clear();
+      _errorMessage = null;
     });
+
+    // Use latest cached adapter state, or wait until known.
+    final preState = _adapterState != BluetoothAdapterState.unknown
+        ? _adapterState
+        : await FlutterBluePlus.adapterState.firstWhere(
+            (state) => state != BluetoothAdapterState.unknown,
+            orElse: () => BluetoothAdapterState.unknown,
+          );
+
+    if (preState != BluetoothAdapterState.on) {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+          _errorMessage =
+              'Bluetooth is ${preState.name.toUpperCase()}. Please turn it ON.';
+        });
+      }
+      return;
+    }
+
+    final hasPermission = await _ensurePermissions();
+    if (!hasPermission) {
+      setState(() {
+        _isScanning = false;
+      });
+      return;
+    }
 
     try {
       // Listen to scan results
@@ -133,7 +205,7 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
       // Start scanning
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
-      // Wait for scan to finish
+      // Wait for scan to finish (in case stopScan is delayed)
       await Future.delayed(const Duration(seconds: 5));
       await FlutterBluePlus.stopScan();
     } catch (e) {
@@ -215,61 +287,82 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
                 ],
               )
             : _isScanning
-                ? const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Scanning for OraStretch devices...'),
-                    ],
-                  )
-                : _devicesFound.isEmpty
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.bluetooth_disabled, size: 48, color: scheme.onSurfaceVariant),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No OraStretch devices found',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Make sure your device is powered on and in range',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _devicesFound.length,
-                        itemBuilder: (context, index) {
-                          final device = _devicesFound[index];
-                          final isConnecting =
-                              _isConnecting && _connectingDeviceId == device.remoteId.str;
+            ? const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Scanning for OraStretch devices...'),
+                ],
+              )
+            : _devicesFound.isEmpty
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.bluetooth_disabled,
+                    size: 48,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No OraStretch devices found',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Make sure your device is powered on and in range',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                itemCount: _devicesFound.length,
+                itemBuilder: (context, index) {
+                  final device = _devicesFound[index];
+                  final isConnecting =
+                      _isConnecting &&
+                      _connectingDeviceId == device.remoteId.str;
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: ListTile(
-                              leading: Icon(Icons.bluetooth_connected, color: scheme.primary),
-                              title: Text(
-                                device.platformName.isEmpty ? 'Unknown Device' : device.platformName,
-                                style: TextStyle(fontWeight: FontWeight.w500, color: scheme.onSurface),
-                              ),
-                              subtitle: Text('ID: ${device.remoteId.str}'),
-                              trailing: isConnecting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.arrow_forward_ios, size: 16),
-                              onTap: isConnecting ? null : () => _connectToDevice(device),
-                            ),
-                          );
-                        },
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.bluetooth_connected,
+                        color: scheme.primary,
                       ),
+                      title: Text(
+                        device.platformName.isEmpty
+                            ? 'Unknown Device'
+                            : device.platformName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      subtitle: Text('ID: ${device.remoteId.str}'),
+                      trailing: isConnecting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: isConnecting
+                          ? null
+                          : () => _connectToDevice(device),
+                    ),
+                  );
+                },
+              ),
       ),
       actions: [
         ElevatedButton(
@@ -277,10 +370,7 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
           child: const Text('Cancel'),
         ),
         if (!_isScanning && _devicesFound.isEmpty && _errorMessage == null)
-          ElevatedButton(
-            onPressed: _startScan,
-            child: const Text('Rescan'),
-          ),
+          ElevatedButton(onPressed: _startScan, child: const Text('Rescan')),
       ],
     );
   }
