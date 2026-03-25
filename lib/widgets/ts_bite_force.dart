@@ -14,7 +14,7 @@ class TsBiteForce extends StatefulWidget {
 }
 
 class _TsBiteForceState extends State<TsBiteForce> {
-  final Set<int> selectedSensors = {1};
+  final Set<int> selectedSensors = {0};
 
   void _openSensorSelector() {
     showDialog(
@@ -29,36 +29,26 @@ class _TsBiteForceState extends State<TsBiteForce> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Wrap(
-                      spacing: 8,
-                      children: List.generate(10, (i) {
-                        final s = i + 1;
-                        final color = _SimplePainter.colors[i];
-
-                        return FilterChip(
-                          label: Text("$s"),
-                          selected: selectedSensors.contains(s),
-                          selectedColor: color.withOpacity(0.6),
-                          backgroundColor: color.withOpacity(0.2),
-                          labelStyle: TextStyle(
-                            fontSize: 16,
-                            color: selectedSensors.contains(s)
-                                ? Colors.white
-                                : Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          side: BorderSide(color: color, width: 2),
-                          onSelected: (_) {
-                            setState(() {
-                              if (selectedSensors.contains(s)) {
-                                selectedSensors.remove(s);
-                              } else {
-                                selectedSensors.add(s);
-                              }
-                            });
-                            setDialogState(() {});
-                          },
-                        );
-                      }),
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildRegionChip(0, "Top Left", setDialogState),
+                            const SizedBox(width: 8),
+                            _buildRegionChip(1, "Top Right", setDialogState),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildRegionChip(2, "Bottom Left", setDialogState),
+                            const SizedBox(width: 8),
+                            _buildRegionChip(3, "Bottom Right", setDialogState),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Padding(
@@ -83,6 +73,33 @@ class _TsBiteForceState extends State<TsBiteForce> {
             );
           },
         );
+      },
+    );
+  }
+
+  Widget _buildRegionChip(int i, String label, Function setDialogState) {
+    final color = _SimplePainter.colors[i];
+
+    return FilterChip(
+      label: Text(label),
+      selected: selectedSensors.contains(i),
+      selectedColor: color.withOpacity(0.6),
+      backgroundColor: color.withOpacity(0.2),
+      labelStyle: TextStyle(
+        fontSize: 16,
+        color: selectedSensors.contains(i) ? Colors.white : Colors.black,
+        fontWeight: FontWeight.bold,
+      ),
+      side: BorderSide(color: color, width: 2),
+      onSelected: (_) {
+        setState(() {
+          if (selectedSensors.contains(i)) {
+            selectedSensors.remove(i);
+          } else {
+            selectedSensors.add(i);
+          }
+        });
+        setDialogState(() {});
       },
     );
   }
@@ -142,8 +159,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                         Container(
                           width: 20,
                           height: 3,
-                          color: _SimplePainter
-                              .colors[(s - 1) % _SimplePainter.colors.length],
+                          color: _SimplePainter.colors[s],
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -177,7 +193,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
               }
 
               final Map<int, List<Offset>> sensorPoints = {
-                for (int i = 1; i <= 10; i++) i: [],
+                for (int i = 0; i < 4; i++) i: [],
               };
 
               for (final row in session) {
@@ -188,20 +204,26 @@ class _TsBiteForceState extends State<TsBiteForce> {
                   bites = List.from(row['bites']);
                 }
 
-                for (int s = 1; s <= 10; s++) {
-                  double v1 = 0;
-                  double v2 = 0;
+                final groups = [
+                  [0, 1, 2, 3], // 1-4
+                  [4, 5, 6, 7], // 5-8
+                  [12, 13, 14, 15], // 13-16
+                  [16, 17, 18, 19], // 17-20
+                ];
 
-                  if (bites.length > (s - 1)) {
-                    v1 = (bites[s - 1] as num).toDouble();
+                for (int g = 0; g < 4; g++) {
+                  double sum = 0;
+                  int count = 0;
+
+                  for (final idx in groups[g]) {
+                    if (bites.length > idx) {
+                      sum += (bites[idx] as num).toDouble();
+                      count++;
+                    }
                   }
 
-                  if (bites.length > (s + 9)) {
-                    v2 = (bites[s + 9] as num).toDouble();
-                  }
-
-                  final avg = (v1 + v2) / 2.0;
-                  sensorPoints[s]!.add(Offset(time.toDouble(), avg));
+                  final avg = count == 0 ? 0.0 : sum / count;
+                  sensorPoints[g]!.add(Offset(time.toDouble(), avg));
                 }
               }
 
@@ -246,12 +268,6 @@ class _SimplePainter extends CustomPainter {
     Color(0xFFD55E00),
     Color(0xFF009E73),
     Color(0xFFCC79A7),
-    Color(0xFFE69F00),
-    Color(0xFF56B4E9),
-    Color(0xFF000000),
-    Color(0xFFF0E442),
-    Color(0xFF999999),
-    Color(0xFF882255),
   ];
 
   @override
@@ -361,7 +377,7 @@ class _SimplePainter extends CustomPainter {
       final s = entry.key;
 
       final paint = Paint()
-        ..color = colors[(s - 1) % colors.length]
+        ..color = colors[s]
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke;
 
