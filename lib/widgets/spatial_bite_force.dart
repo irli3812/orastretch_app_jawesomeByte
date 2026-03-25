@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../main.dart';
@@ -108,30 +109,37 @@ class SpatialBiteForce extends StatelessWidget {
     );
   }
 
-  // ===== ARCH BUILDER =====
+  // ===== ARCH BUILDER (REAL SEMICIRCLE) =====
   Widget _buildArch(List<double> vals, {required bool isTop}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 6,
-        runSpacing: 6,
-        children: List.generate(vals.length, (i) {
-          // Create curvature by vertical offset
-          final index = i;
-          final mid = (vals.length - 1) / 2;
-          final curve = (index - mid).abs();
+    const double radius = 210; // increase for more dramatic curvature
+    const double boxWidth = 55;
+    const double boxHeight = 85;
+    const double verticalRadius = 90;
 
-          final verticalOffset = curve * 8; // (isTop ? 4 : 4); // multiplier increase makes curve more pronounced
+    return SizedBox(
+      height: radius + boxHeight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final centerX = constraints.maxWidth / 2;
 
-          return Padding(
-            padding: EdgeInsets.only(
-              top: isTop ? verticalOffset : 0,
-              bottom: isTop ? 0 : verticalOffset,
-            ),
-            child: _buildBox(i, vals[i], isTop),
+          return Stack(
+            children: List.generate(vals.length, (i) {
+              final angle = pi * (i / (vals.length - 1));
+
+              final x = centerX + (cos(angle - pi) * radius) - (boxWidth / 2);
+
+              final y = isTop
+                  ? (radius - sin(angle) * radius)
+                  : (sin(angle) * radius);
+
+              return Positioned(
+                left: x,
+                top: y,
+                child: _buildBox(i, vals[i], isTop),
+              );
+            }),
           );
-        }),
+        },
       ),
     );
   }
@@ -148,8 +156,8 @@ class SpatialBiteForce extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       builder: (context, animatedColor, _) {
         return Container(
-          width: 65,
-          height: 95,
+          width: 60,
+          height: 85,
           decoration: BoxDecoration(
             color: animatedColor,
             borderRadius: BorderRadius.circular(12),
@@ -161,7 +169,7 @@ class SpatialBiteForce extends StatelessWidget {
               Text(
                 '$sensorNumber',
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: textColor,
                 ),
@@ -173,7 +181,7 @@ class SpatialBiteForce extends StatelessWidget {
               Text(
                 value.toStringAsFixed(0),
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: textColor,
                 ),
@@ -185,7 +193,7 @@ class SpatialBiteForce extends StatelessWidget {
               Text(
                 'N',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: textColor.withOpacity(0.85),
                 ),
               ),
