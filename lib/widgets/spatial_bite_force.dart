@@ -109,15 +109,15 @@ class SpatialBiteForce extends StatelessWidget {
     );
   }
 
-  // ===== ARCH BUILDER (REAL SEMICIRCLE) =====
+  // ===== ARCH BUILDER (ELLIPTICAL DENTAL ARCH) =====
   Widget _buildArch(List<double> vals, {required bool isTop}) {
-    const double radius = 210; // increase for more dramatic curvature
+    const double radiusX = 230; // horizontal width
+    const double radiusY = 80;  // vertical height (flatter like teeth)
     const double boxWidth = 55;
     const double boxHeight = 85;
-    const double verticalRadius = 90;
 
     return SizedBox(
-      height: radius + boxHeight,
+      height: radiusY + boxHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final centerX = constraints.maxWidth / 2;
@@ -126,11 +126,12 @@ class SpatialBiteForce extends StatelessWidget {
             children: List.generate(vals.length, (i) {
               final angle = pi * (i / (vals.length - 1));
 
-              final x = centerX + (cos(angle - pi) * radius) - (boxWidth / 2);
+              final x =
+                  centerX + (cos(angle - pi) * radiusX) - (boxWidth / 2);
 
               final y = isTop
-                  ? (radius - sin(angle) * radius)
-                  : (sin(angle) * radius);
+                  ? (radiusY - sin(angle) * radiusY)
+                  : (sin(angle) * radiusY);
 
               return Positioned(
                 left: x,
@@ -156,7 +157,7 @@ class SpatialBiteForce extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       builder: (context, animatedColor, _) {
         return Container(
-          width: 60,
+          width: 55,
           height: 85,
           decoration: BoxDecoration(
             color: animatedColor,
@@ -165,7 +166,6 @@ class SpatialBiteForce extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // SENSOR #
               Text(
                 '$sensorNumber',
                 style: const TextStyle(
@@ -177,7 +177,6 @@ class SpatialBiteForce extends StatelessWidget {
 
               const SizedBox(height: 4),
 
-              // VALUE
               Text(
                 value.toStringAsFixed(0),
                 style: const TextStyle(
@@ -189,7 +188,6 @@ class SpatialBiteForce extends StatelessWidget {
 
               const SizedBox(height: 2),
 
-              // UNIT
               Text(
                 'N',
                 style: TextStyle(
@@ -206,10 +204,8 @@ class SpatialBiteForce extends StatelessWidget {
 
   // ===== COLOR SCALE =====
   Color _valueToColor(double value) {
-    final normalized = ((value - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)).clamp(
-      0.0,
-      1.0,
-    );
+    final normalized =
+        ((value - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)).clamp(0.0, 1.0);
 
     if (normalized < 0.5) {
       final t = normalized / 0.5;
