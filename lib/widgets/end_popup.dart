@@ -55,7 +55,7 @@ class EndSessionPopup extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Return to Recording'),
                 ),

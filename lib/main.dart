@@ -1,5 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
-
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'pages.dart';
 import 'widgets/bluetooth_button.dart';
@@ -26,6 +26,27 @@ const double bfGaugeMax = 150.0;
 const int bfMinorDivisions = 15;
 const int bfMajorDivisions = 5;
 
+Widget getPlatformWidget() {
+  String platformText;
+  if (Platform.isAndroid) {
+    platformText = "Android detected";
+  } else if (Platform.isIOS) {
+    platformText = "iOS detected";
+  } else {
+    platformText = "Other platform detected";
+  }
+  return Text(
+    platformText,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
+      color: Color.fromARGB(255, 186, 221, 250),
+    ),
+    overflow: TextOverflow.ellipsis,
+    maxLines: 1,
+  );
+}
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -39,7 +60,8 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) { 
     return MaterialApp(
-      title: 'Bitefeedback',
+      //debugShowCheckedModeBanner: false,
+      title: 'OraStretch Tech',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -53,25 +75,16 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                        Text(
-                          'Bitefeedback', 
+                    children: [
+                        const Text(
+                          'OraStretch Tech', 
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
-                        Text(
-                          'OraStretch Companion',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 186, 221, 250),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                        getPlatformWidget(),
                       ],
                   ),
                 ),

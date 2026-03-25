@@ -49,12 +49,6 @@ class _TsMouthOpeningState extends State<TsMouthOpening> {
                 box.get('mouth_opening_current_series', defaultValue: []),
               );
 
-              if (times.isEmpty || values.isEmpty) {
-                return const Center(
-                  child: Text("Waiting for data..."),
-                );
-              }
-
               final List<Offset> points = [];
 
               for (int i = 0; i < times.length && i < values.length; i++) {
@@ -66,7 +60,7 @@ class _TsMouthOpeningState extends State<TsMouthOpening> {
                 );
               }
 
-              final double latestTime = points.last.dx;
+              final double latestTime = points.isNotEmpty ? points.last.dx : 0;
 
               final double minTime = (latestTime -
                       TsMouthOpening.windowMs)

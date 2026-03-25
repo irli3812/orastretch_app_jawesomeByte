@@ -43,32 +43,47 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               ),
               const Spacer(),
 
-              IconButton(
-                icon: const Icon(Icons.view_week), // spatial teeth map
-                color: _viewMode == ViewMode.spatial
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+              ElevatedButton(
                 onPressed: () => setState(() {
                   _viewMode = ViewMode.spatial;
                 }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _viewMode == ViewMode.spatial
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  foregroundColor: _viewMode == ViewMode.spatial
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                child: const Icon(Icons.view_week), // spatial teeth map
               ),
-              IconButton(
-                icon: const Icon(Icons.speed),
-                color: _viewMode == ViewMode.meter
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+              ElevatedButton(
                 onPressed: () => setState(() {
                   _viewMode = ViewMode.meter;
                 }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _viewMode == ViewMode.meter
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  foregroundColor: _viewMode == ViewMode.meter
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                child: const Icon(Icons.speed),
               ),
-              IconButton(
-                icon: const Icon(Icons.show_chart),
-                color: _viewMode == ViewMode.timeseries
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+              ElevatedButton(
                 onPressed: () => setState(() {
                   _viewMode = ViewMode.timeseries;
                 }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _viewMode == ViewMode.timeseries
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  foregroundColor: _viewMode == ViewMode.timeseries
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                child: const Icon(Icons.show_chart),
               ),
             ],
           ),

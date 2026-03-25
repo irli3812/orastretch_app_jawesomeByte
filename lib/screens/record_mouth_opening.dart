@@ -22,8 +22,6 @@ class RecordMouthOpening extends StatefulWidget {
 
 class _RecordMouthOpeningState extends State<RecordMouthOpening> {
 
-  /*int? _lastResetSignal;
-  int? _lastStartSignal;*/
   ViewMode _viewMode = ViewMode.meter;
 
   @override
@@ -43,23 +41,33 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.speed),
-                color: _viewMode == ViewMode.meter
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+              ElevatedButton(
                 onPressed: () => setState(() {
                   _viewMode = ViewMode.meter;
                 }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _viewMode == ViewMode.meter
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  foregroundColor: _viewMode == ViewMode.meter
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                child: const Icon(Icons.speed),
               ),
-              IconButton(
-                icon: const Icon(Icons.show_chart),
-                color: _viewMode == ViewMode.timeseries
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey,
+              ElevatedButton(
                 onPressed: () => setState(() {
                   _viewMode = ViewMode.timeseries;
                 }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _viewMode == ViewMode.timeseries
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade300,
+                  foregroundColor: _viewMode == ViewMode.timeseries
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                child: const Icon(Icons.show_chart),
               ),
             ],
           ),
@@ -74,22 +82,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                     valueListenable: box.listenable(
                         keys: ['mouth_opening_current_series', 'mouth_opening_max_series', 'mouth_opening_avg_series', 'resetSignal', 'startSignal']),
                     builder: (context, _, __) {
-                      /*final int? resetSignal =
-                          box.get('resetSignal');
-                      final int? startSignal =
-                          box.get('startSignal');
-
-                      if (resetSignal != null &&
-                          resetSignal != _lastResetSignal) {
-                        _lastResetSignal = resetSignal;
-                        maxValue = 0;
-                      }
-
-                      if (startSignal != null &&
-                          startSignal != _lastStartSignal) {
-                        _lastStartSignal = startSignal;
-                        maxValue = 0;
-                      }*/
 
                       final List currentSeries =
                           List.from(box.get('mouth_opening_current_series', defaultValue: []));
@@ -114,22 +106,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
             valueListenable:
                 box.listenable(keys: ['mouth_opening_current_series', 'mouth_opening_avg_series', 'mouth_opening_max_series', 'mouth_opening_max_series', 'resetSignal', 'startSignal']),
             builder: (context, _, __) {
-              /*final int? resetSignal =
-                  box.get('resetSignal');
-              final int? startSignal =
-                  box.get('startSignal');
-
-              if (resetSignal != null &&
-                  resetSignal != _lastResetSignal) {
-                _lastResetSignal = resetSignal;
-                maxValue = 0;
-              }
-
-              if (startSignal != null &&
-                  startSignal != _lastStartSignal) {
-                _lastStartSignal = startSignal;
-                maxValue = 0;
-              }*/
               final List currentSeries =
                   List.from(box.get('mouth_opening_current_series', defaultValue: []));
               final List avgSeries =

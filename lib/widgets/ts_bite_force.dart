@@ -14,7 +14,24 @@ class TsBiteForce extends StatefulWidget {
 }
 
 class _TsBiteForceState extends State<TsBiteForce> {
-  final Set<int> selectedSensors = {0};
+  static const List<String> regionLabels = [
+    "Top Left",
+    "Top Right",
+    "Bottom Left",
+    "Bottom Right",
+  ];
+
+  late Set<int> selectedSensors;
+
+  @override
+  void initState() {
+    super.initState();
+    final box = Hive.box('appBox');
+    final List<int> saved = List.from(
+      box.get('selectedSensors', defaultValue: [0]),
+    );
+    selectedSensors = Set.from(saved);
+  }
 
   void _openSensorSelector() {
     showDialog(
@@ -23,41 +40,70 @@ class _TsBiteForceState extends State<TsBiteForce> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text("Select Sensor Pair(s)"),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              title: const Text("Select Sensor Region(s)"),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
+                    Column(
                       children: [
                         Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildRegionChip(0, "Top Left", setDialogState),
+                            Expanded(
+                              child: _buildRegionChip(
+                                0,
+                                "Top Left",
+                                setDialogState,
+                              ),
+                            ),
                             const SizedBox(width: 8),
-                            _buildRegionChip(1, "Top Right", setDialogState),
+                            Expanded(
+                              child: _buildRegionChip(
+                                1,
+                                "Top Right",
+                                setDialogState,
+                              ),
+                            ),
                           ],
                         ),
+                        const SizedBox(height: 8),
                         Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildRegionChip(2, "Bottom Left", setDialogState),
+                            Expanded(
+                              child: _buildRegionChip(
+                                2,
+                                "Bottom Left",
+                                setDialogState,
+                              ),
+                            ),
                             const SizedBox(width: 8),
-                            _buildRegionChip(3, "Bottom Right", setDialogState),
+                            Expanded(
+                              child: _buildRegionChip(
+                                3,
+                                "Bottom Right",
+                                setDialogState,
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Image.asset(
-                          'lib/images/teeth_anatomy_transparent_png.png',
-                          fit: BoxFit.contain,
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 250),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'lib/images/teeth_anatomy_transparent_png.png',
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                     ),
@@ -65,7 +111,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                 ),
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text("Close", style: TextStyle(fontSize: 16)),
                 ),
@@ -79,28 +125,54 @@ class _TsBiteForceState extends State<TsBiteForce> {
 
   Widget _buildRegionChip(int i, String label, Function setDialogState) {
     final color = _SimplePainter.colors[i];
+    final selected = selectedSensors.contains(i);
 
-    return FilterChip(
-      label: Text(label),
-      selected: selectedSensors.contains(i),
-      selectedColor: color.withOpacity(0.6),
-      backgroundColor: color.withOpacity(0.2),
-      labelStyle: TextStyle(
-        fontSize: 16,
-        color: selectedSensors.contains(i) ? Colors.white : Colors.black,
-        fontWeight: FontWeight.bold,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            if (selected) {
+              if (selectedSensors.length > 1) {
+                selectedSensors.remove(i);
+              }
+            } else {
+              selectedSensors.add(i);
+            }
+          });
+
+          final box = Hive.box('appBox');
+          box.put('selectedSensors', selectedSensors.toList());
+          setDialogState(() {});
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                softWrap: true,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.check, size: 18, color: Colors.white),
+            ],
+          ],
+        ),
       ),
-      side: BorderSide(color: color, width: 2),
-      onSelected: (_) {
-        setState(() {
-          if (selectedSensors.contains(i)) {
-            selectedSensors.remove(i);
-          } else {
-            selectedSensors.add(i);
-          }
-        });
-        setDialogState(() {});
-      },
     );
   }
 
@@ -131,7 +203,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    "Select Sensor Pair(s)",
+                    "Select Sensor Region(s)",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -148,8 +220,9 @@ class _TsBiteForceState extends State<TsBiteForce> {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.centerRight,
                 child: Wrap(
+                  alignment: WrapAlignment.end,
                   spacing: 12,
                   runSpacing: 4,
                   children: activeSensors.map((s) {
@@ -163,7 +236,7 @@ class _TsBiteForceState extends State<TsBiteForce> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "$s",
+                          regionLabels[s],
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -187,10 +260,6 @@ class _TsBiteForceState extends State<TsBiteForce> {
               final List session = List.from(
                 box.get('session', defaultValue: []),
               );
-
-              if (session.isEmpty) {
-                return const Center(child: Text("Waiting for data..."));
-              }
 
               final Map<int, List<Offset>> sensorPoints = {
                 for (int i = 0; i < 4; i++) i: [],
@@ -227,8 +296,13 @@ class _TsBiteForceState extends State<TsBiteForce> {
                 }
               }
 
-              final double latestTime = sensorPoints[1]!.isNotEmpty
-                  ? sensorPoints[1]!.last.dx
+              final double latestTime = sensorPoints.values
+                  .expand((list) => list)
+                  .isNotEmpty
+                  ? sensorPoints.values
+                      .expand((list) => list)
+                      .map((p) => p.dx)
+                      .reduce((a, b) => a > b ? a : b)
                   : 0;
 
               final double minTime = (latestTime - TsBiteForce.windowMs).clamp(

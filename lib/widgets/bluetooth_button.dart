@@ -47,9 +47,15 @@ class BluetoothButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
+    return ElevatedButton(
       onPressed: () => _handleConnect(context),
-      icon: Icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(48, 48),
+      ),
+      child: Icon(
         isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
         color: Colors.white,
         size: 24,
@@ -266,12 +272,12 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
                       ),
       ),
       actions: [
-        TextButton(
+        ElevatedButton(
           onPressed: _isConnecting ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
         if (!_isScanning && _devicesFound.isEmpty && _errorMessage == null)
-          TextButton(
+          ElevatedButton(
             onPressed: _startScan,
             child: const Text('Rescan'),
           ),
