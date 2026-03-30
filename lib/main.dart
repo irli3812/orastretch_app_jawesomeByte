@@ -78,7 +78,7 @@ class BatteryStatus extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: Colors.black, // contrast
+              color: Colors.white,
             ),
             const SizedBox(width: 4),
             Text(
@@ -86,7 +86,7 @@ class BatteryStatus extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.black, // contrast
+                color: Colors.white,
               ),
             ),
           ],

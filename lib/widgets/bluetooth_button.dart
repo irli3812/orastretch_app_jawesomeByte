@@ -60,7 +60,7 @@ class BluetoothButton extends StatelessWidget {
       ),
       child: Icon(
         isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-        color: Colors.white,
+        color: const Color(0xFF0072B2),
         size: 24,
       ),
     );
