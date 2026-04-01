@@ -160,8 +160,8 @@ class _TsBiteForceState extends State<TsBiteForce> {
           setDialogState(() {});
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: color,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
         child: Row(
@@ -176,13 +176,13 @@ class _TsBiteForceState extends State<TsBiteForce> {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
             ),
             if (selected) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.check, size: 18, color: Colors.white),
+              Icon(Icons.check, size: 18, color: color),
             ],
           ],
         ),

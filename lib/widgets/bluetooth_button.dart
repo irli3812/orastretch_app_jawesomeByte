@@ -67,8 +67,7 @@ class BluetoothButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () => _handleConnect(context),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
+        backgroundColor: Colors.white,
         padding: EdgeInsets.zero,
         minimumSize: const Size(48, 48),
       ),

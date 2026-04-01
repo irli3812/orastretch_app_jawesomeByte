@@ -210,6 +210,16 @@ class _MyAppState extends State<MyApp> {
       title: 'OraStretch Tech',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF1F2937),
+            disabledBackgroundColor: const Color(0xFFF3F4F6),
+            disabledForegroundColor: const Color(0xFF9CA3AF),
+            side: const BorderSide(color: Color(0xFFE5E7EB)),
+            elevation: 1,
+          ),
+        ),
         useMaterial3: true,
       ),
       home: Scaffold(

@@ -43,8 +43,8 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.zero,
-              backgroundColor: selected ? scheme.primary : Colors.grey.shade300,
-              foregroundColor: selected ? Colors.white : Colors.black,
+              backgroundColor: Colors.white,
+              foregroundColor: selected ? scheme.primary : Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
