@@ -12,6 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox('appBox');
+  await Hive.openBox('savedSessionsBox');
   runApp(const MyApp());
 }
 

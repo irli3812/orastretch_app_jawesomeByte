@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/save_session.dart';
 import '../services/session_data_service.dart';
 
 
@@ -6,11 +7,60 @@ class EndSessionPopup extends StatelessWidget {
   EndSessionPopup({super.key});
 
   final SessionDataService _session = SessionDataService();
+  final SaveSessionService _saveSessionService = SaveSessionService();
 
   void _deleteSession(BuildContext context) {
     _session.stop();
     _session.clear();
     Navigator.of(context).pop();
+  }
+
+  Future<void> _saveSession(BuildContext context) async {
+    final TextEditingController controller = TextEditingController(
+      text: _saveSessionService.defaultSessionName(),
+    );
+
+    final String? sessionName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Save Session Name'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Session Name',
+              hintText: 'mm_dd_yy',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(controller.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (sessionName == null) {
+      return;
+    }
+
+    await _saveSessionService.saveSessionShell(name: sessionName);
+    _session.stop();
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session saved')),
+      );
+    }
   }
 
   @override
@@ -122,7 +172,7 @@ class EndSessionPopup extends StatelessWidget {
                   ),
                   Expanded(
                     child: InkWell(
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: () => _saveSession(context),
                       child: Container(
                         alignment: Alignment.center,
                         child: Row(
