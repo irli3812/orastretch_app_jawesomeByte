@@ -2,6 +2,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class SaveSessionService {
 	static const String boxName = 'savedSessionsBox';
+	static const String appBoxName = 'appBox';
+	static const String sessionStartTimeKey = 'session_start_time';
 
 	String defaultSessionName() {
 		final now = DateTime.now();
@@ -11,17 +13,28 @@ class SaveSessionService {
 		return '${mm}_${dd}_$yy';
 	}
 
-	Future<void> saveSessionShell({required String name}) async {
+	Future<void> saveSessionShell({
+		required String name,
+	}) async {
 		final String trimmedName = name.trim().isEmpty ? defaultSessionName() : name.trim();
+		final DateTime now = DateTime.now();
+		final String endTime = _formatTimeOfDay(now);
 
 		final box = Hive.isBoxOpen(boxName)
 				? Hive.box(boxName)
 				: await Hive.openBox(boxName);
 
+		final appBox = Hive.isBoxOpen(appBoxName)
+				? Hive.box(appBoxName)
+				: await Hive.openBox(appBoxName);
+		final dynamic savedStart = appBox.get(sessionStartTimeKey);
+		final String? startTime = savedStart is String ? savedStart : null;
+
 		final Map<String, dynamic> row = {
 			'name': trimmedName,
-			'start_time': null,
-			'end_time': null,
+			'created_at_epoch_ms': now.millisecondsSinceEpoch,
+			'start_time': startTime,
+			'end_time': endTime,
 			'max_bite_force': null,
 			'max_mouth_opening': null,
 			'strain_gauge_01_max': null,
@@ -47,5 +60,12 @@ class SaveSessionService {
 		};
 
 		await box.add(row);
+	}
+
+	String _formatTimeOfDay(DateTime dt) {
+		final int hour12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+		final String minutes = dt.minute.toString().padLeft(2, '0');
+		final String suffix = dt.hour >= 12 ? 'PM' : 'AM';
+		return '${hour12.toString()}:$minutes$suffix';
 	}
 }

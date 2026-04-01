@@ -39,6 +39,7 @@ static const _biteAvgSeriesKey = 'bite_force_avg_series';
 static const _biteMaxSeriesKey = 'bite_force_max_series';
 
 static const _batteryKey = 'batteryPercent';
+static const _sessionStartTimeKey = 'session_start_time';
 
   // Singleton
   static final SessionDataService _instance =
@@ -225,6 +226,7 @@ static const _batteryKey = 'batteryPercent';
     _box.put(_biteAvgSeriesKey, []);
     _box.put(_biteMaxSeriesKey, []);
     _box.put('session', []);
+    _box.put(_sessionStartTimeKey, _formatTimeOfDay(DateTime.now()));
 
     _box.put('is_recording', true);
 
@@ -245,8 +247,16 @@ static const _batteryKey = 'batteryPercent';
     _box.delete(_biteCurrentSeriesKey);
     _box.delete(_biteAvgSeriesKey);
     _box.delete(_biteMaxSeriesKey);
+    _box.delete(_sessionStartTimeKey);
     _box.put('is_recording', false);
     notifyListeners();
+  }
+
+  String _formatTimeOfDay(DateTime dt) {
+    final int hour12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final String minutes = dt.minute.toString().padLeft(2, '0');
+    final String suffix = dt.hour >= 12 ? 'PM' : 'AM';
+    return '${hour12.toString()}:$minutes$suffix';
   }
 
   @override
