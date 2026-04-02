@@ -160,25 +160,31 @@ class _SessionHistoryState extends State<SessionHistory> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               if (!useDefaultTitle) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
                   'Custom name: $name',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 18,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       'Start: ${startTime ?? '--'}',
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -189,32 +195,35 @@ class _SessionHistoryState extends State<SessionHistory> {
                       'End: ${endTime ?? '--'}',
                       textAlign: TextAlign.right,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 'Duration: $durationText',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 18,
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 'Max bite force: $maxBiteForDetails',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 18,
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ],
           ),
-          content: const Text('Session details view coming soon.'),
+          content: const Text(
+            'Session details view coming soon.',
+            style: TextStyle(fontSize: 18),
+          ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             ElevatedButton.icon(
@@ -238,18 +247,26 @@ class _SessionHistoryState extends State<SessionHistory> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
-              icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text('Delete'),
+              icon: const Icon(Icons.delete_outline, size: 22),
+              label: const Text('Delete', style: TextStyle(fontSize: 18)),
             ),
             ElevatedButton.icon(
               onPressed: () => Navigator.of(dialogContext).pop(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
-              icon: const Icon(Icons.close, size: 18),
-              label: const Text('Close'),
+              icon: const Icon(Icons.close, size: 22),
+              label: const Text('Close', style: TextStyle(fontSize: 18)),
             ),
           ],
         );
@@ -277,12 +294,12 @@ class _SessionHistoryState extends State<SessionHistory> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final padding = isMobile ? 12.0 : 16.0;
-    final nameSize = isMobile ? 14.0 : 16.0;
-    final metricSize = isMobile ? 14.0 : 16.0;
+    final nameSize = isMobile ? 18.0 : 24.0;
+    final metricSize = isMobile ? 18.0 : 24.0;
     final buttonPadding = isMobile ? 10.0 : 14.0;
-    final buttonHeight = isMobile ? 58.0 : 66.0;
-    final actionButtonHeight = isMobile ? 34.0 : 38.0;
-    final actionButtonFont = isMobile ? 12.0 : 13.0;
+    final buttonHeight = isMobile ? 78.0 : 92.0;
+    final actionButtonHeight = isMobile ? 46.0 : 54.0;
+    final actionButtonFont = isMobile ? 16.0 : 20.0;
     final box = Hive.box(SaveSessionService.boxName);
 
     return Padding(
@@ -341,7 +358,7 @@ class _SessionHistoryState extends State<SessionHistory> {
                     child: Text(
                       'No sessions recorded yet',
                       style: TextStyle(
-                        fontSize: isMobile ? 14 : 16,
+                        fontSize: isMobile ? 20 : 26,
                         color: Colors.grey,
                       ),
                     ),

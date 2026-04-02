@@ -64,8 +64,22 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('appBox');
-    final screenWidth = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final shortestSide = media.size.shortestSide;
+    final platform = Theme.of(context).platform;
+    final isDesktop =
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
     final isMobile = screenWidth < 600;
+    final screenScale = (shortestSide / 400).clamp(0.85, 1.15);
+    final platformScale = isDesktop ? 1.0 : 0.92;
+    double scale(double base) => base * screenScale * platformScale;
+    final metricLabelSize = scale(20);
+    final metricValueSize = scale(28);
+    final metricUnitSize = scale(18);
+    final metricGap = scale(8);
 
     return Padding(
       padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
@@ -74,63 +88,69 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
         children: [
           // ===== Title + buttons =====
           Align(
-            alignment: Alignment.centerRight,
+            alignment: Alignment.center,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  'Select Mode',
-                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                Expanded(
+                  child: Text(
+                    _viewMode == ViewMode.meter
+                        ? 'Latest Mouth Opening Distance (mm)'
+                        : 'Current Mouth Opening Distance and Time',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                      fontSize: isMobile ? 20 : 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      _modeButton(
-                        context: context,
-                        icon: Icons.speed,
-                        label: 'Meter',
-                        selected: _viewMode == ViewMode.meter,
-                        onPressed: () => setState(() => _viewMode = ViewMode.meter),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Select Mode',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
                       ),
-                      _modeButton(
-                        context: context,
-                        icon: Icons.show_chart,
-                        label: 'Graph',
-                        selected: _viewMode == ViewMode.timeseries,
-                        onPressed: () =>
-                            setState(() => _viewMode = ViewMode.timeseries),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        _modeButton(
+                          context: context,
+                          icon: Icons.speed,
+                          label: 'Meter',
+                          selected: _viewMode == ViewMode.meter,
+                          onPressed: () =>
+                              setState(() => _viewMode = ViewMode.meter),
+                        ),
+                        _modeButton(
+                          context: context,
+                          icon: Icons.show_chart,
+                          label: 'Graph',
+                          selected: _viewMode == ViewMode.timeseries,
+                          onPressed: () =>
+                              setState(() => _viewMode = ViewMode.timeseries),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 3),
+          const SizedBox(height: 8),
 
-          Center(
-            child: _viewMode == ViewMode.meter
-                ? const Text(
-                    'Latest Mouth Opening Distance (mm)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  )
-                : const Text(
-                    'Current Mouth Opening Distance and Time',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-          ),
-
-          const SizedBox(height: 3),
-
-          // ===== METER (fills middle space) =====
+          // ===== METER =====
           Expanded(
             flex: 3,
             child: _viewMode == ViewMode.meter
@@ -206,60 +226,104 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
               return Column(
                 children: [
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
-                        child: Text(
-                          'Latest',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Latest',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          'Max',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Max',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          'Average',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Average',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: metricGap),
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          '$value',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '$value',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          '$maxValue',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '$maxValue',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          avg.toStringAsFixed(1),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            avg.toStringAsFixed(1),
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: metricGap),
+                  Text(
                     'millimeters',
-                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: metricUnitSize,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               );

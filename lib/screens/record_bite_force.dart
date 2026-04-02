@@ -68,8 +68,22 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('appBox');
-    final screenWidth = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final shortestSide = media.size.shortestSide;
+    final platform = Theme.of(context).platform;
+    final isDesktop =
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
     final isMobile = screenWidth < 600;
+    final screenScale = (shortestSide / 400).clamp(0.85, 1.15);
+    final platformScale = isDesktop ? 1.0 : 0.92;
+    double scale(double base) => base * screenScale * platformScale;
+    final metricLabelSize = scale(20);
+    final metricValueSize = scale(28);
+    final metricUnitSize = scale(18);
+    final metricGap = scale(8);
 
     return Padding(
       padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
@@ -78,77 +92,79 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
         children: [
           // ===== Title + mode buttons =====
           Align(
-            alignment: Alignment.centerRight,
+            alignment: Alignment.center,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  'Select Mode',
-                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                Expanded(
+                  child: Text(
+                    _viewMode == ViewMode.meter
+                        ? 'Latest Bite Force (N)'
+                        : _viewMode == ViewMode.spatial
+                        ? 'Colored Teeth Force Map'
+                        : 'Current Bite Force and Time',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                      fontSize: isMobile ? 20 : 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      _modeButton(
-                        context: context,
-                        icon: Icons.view_week,
-                        label: 'Map',
-                        selected: _viewMode == ViewMode.spatial,
-                        onPressed: () =>
-                            setState(() => _viewMode = ViewMode.spatial),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Select Mode',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
                       ),
-                      _modeButton(
-                        context: context,
-                        icon: Icons.speed,
-                        label: 'Meter',
-                        selected: _viewMode == ViewMode.meter,
-                        onPressed: () => setState(() => _viewMode = ViewMode.meter),
-                      ),
-                      _modeButton(
-                        context: context,
-                        icon: Icons.show_chart,
-                        label: 'Graph',
-                        selected: _viewMode == ViewMode.timeseries,
-                        onPressed: () =>
-                            setState(() => _viewMode = ViewMode.timeseries),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        _modeButton(
+                          context: context,
+                          icon: Icons.view_week,
+                          label: 'Map',
+                          selected: _viewMode == ViewMode.spatial,
+                          onPressed: () =>
+                              setState(() => _viewMode = ViewMode.spatial),
+                        ),
+                        _modeButton(
+                          context: context,
+                          icon: Icons.speed,
+                          label: 'Meter',
+                          selected: _viewMode == ViewMode.meter,
+                          onPressed: () =>
+                              setState(() => _viewMode = ViewMode.meter),
+                        ),
+                        _modeButton(
+                          context: context,
+                          icon: Icons.show_chart,
+                          label: 'Graph',
+                          selected: _viewMode == ViewMode.timeseries,
+                          onPressed: () =>
+                              setState(() => _viewMode = ViewMode.timeseries),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 3),
+          const SizedBox(height: 8),
 
-          Center(
-            child: _viewMode == ViewMode.meter
-                ? const Text(
-                    'Latest Bite Force (N)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  )
-                : _viewMode == ViewMode.spatial
-                    ? const Text(
-                        'Colored Teeth Force Map',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      )
-                    : const Text(
-                        'Current Bite Force and Time',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-          ),
-
-          const SizedBox(height: 3),
-
-          // ===== MAIN VIEW (fills middle space) =====
+          // ===== MAIN VIEW =====
           Expanded(
             flex: 3,
             child: _viewMode == ViewMode.meter
@@ -195,7 +211,6 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
 
           // ===== METRICS =====
           ValueListenableBuilder(
-            // rebuild when the underlying series update or control signals change
             valueListenable: box.listenable(
               keys: [
                 'session',
@@ -216,18 +231,16 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               if (startSignal != null && startSignal != _lastStartSignal) {
                 _lastStartSignal = startSignal;
               }
-              // the average series holds the per‑sample averages coming from BLE
+
               final List avgSeries = box.get(
                 'bite_force_avg_series',
                 defaultValue: [],
               );
 
-              // "latest" should reflect the most recent averaged value
               final double latest = avgSeries.isNotEmpty
                   ? (avgSeries.last as num).toDouble()
                   : 0.0;
 
-              // compute an overall average of all entries in the avgSeries
               double avg = 0.0;
               if (avgSeries.isNotEmpty) {
                 final sum = avgSeries.fold<double>(
@@ -250,60 +263,104 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               return Column(
                 children: [
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
-                        child: Text(
-                          'Latest',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Latest',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          'Max',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Max',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          'Average',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Average',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: metricGap),
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          latest.toStringAsFixed(1),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            latest.toStringAsFixed(1),
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          max.toStringAsFixed(1),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            max.toStringAsFixed(1),
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          avg.toStringAsFixed(1),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            avg.toStringAsFixed(1),
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: metricGap),
+                  Text(
                     'Newtons (N)',
-                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: metricUnitSize,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               );
@@ -329,7 +386,7 @@ class _BiteForceGaugePainter extends CustomPainter {
 
     final arcPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = isMobile ? 10 : 14
+      ..strokeWidth = isMobile ? 30 : 42
       ..strokeCap = StrokeCap.round;
 
     // ===== Colored arcs =====
@@ -393,12 +450,17 @@ class _BiteForceGaugePainter extends CustomPainter {
         final tp = TextPainter(
           text: TextSpan(
             text: valueTick.round().toString(),
-            style: const TextStyle(fontSize: 12, color: Colors.black),
+            style: TextStyle(
+              fontSize: isMobile ? 18 : 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
 
-        final double labelRadius = radius * 0.95;
+        // Place labels below/inward from ticks to avoid overlapping arc colors.
+        final double labelRadius = radius * 0.62;
         final Offset pos = Offset(
           center.dx + cos(angle) * labelRadius - tp.width / 2,
           center.dy + sin(angle) * labelRadius - tp.height / 2,

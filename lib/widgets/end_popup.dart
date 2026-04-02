@@ -74,6 +74,7 @@ class EndSessionPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isMobile = MediaQuery.of(context).size.width < 600;
     const deleteColor = Color(0xFFCC79A7);
     const saveColor = Color(0xFF0072B2);
     final rows = _session.rows;
@@ -127,20 +128,33 @@ class EndSessionPopup extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _summaryRow('Max bite', '$maxBiteForce N', 14, 16),
-                  _summaryRow(
-                    'Avg bite',
-                    avgBiteForce.toStringAsFixed(1),
-                    14,
-                    16,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _metricColumn(
+                          heading: 'Bite Force',
+                          maxValue: '$maxBiteForce N',
+                          avgValue: '${avgBiteForce.toStringAsFixed(1)} N',
+                          isMobile: isMobile,
+                        ),
+                      ),
+                      SizedBox(width: isMobile ? 20 : 28),
+                      Expanded(
+                        child: _metricColumn(
+                          heading: 'Mouth Opening',
+                          maxValue: '$maxMio mm',
+                          avgValue: '${avgMio.toStringAsFixed(1)} mm',
+                          isMobile: isMobile,
+                        ),
+                      ),
+                    ],
                   ),
-                  _summaryRow('Max mouth', '$maxMio mm', 14, 16),
-                  _summaryRow('Avg mouth', avgMio.toStringAsFixed(1), 14, 16),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isMobile ? 18 : 22),
                   Text(
                     'Deleting session will permanently remove the recorded data.',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: isMobile ? 14 : 16,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -164,12 +178,12 @@ class EndSessionPopup extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              Icon(Icons.delete, color: Colors.white, size: 22),
+                              Icon(Icons.delete, color: Colors.black, size: 22),
                               SizedBox(width: 8),
                               Text(
                                 'Delete Session',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 18,
                                 ),
@@ -191,12 +205,12 @@ class EndSessionPopup extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              Icon(Icons.save, color: Colors.white, size: 22),
+                              Icon(Icons.save, color: Colors.black, size: 22),
                               SizedBox(width: 8),
                               Text(
                                 'Save Session',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 18,
                                 ),
@@ -216,24 +230,51 @@ class EndSessionPopup extends StatelessWidget {
     );
   }
 
-  static Widget _summaryRow(
-    String label,
-    String value,
-    double labelSize,
-    double valueSize,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(fontSize: labelSize)),
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: valueSize),
+  static Widget _metricColumn({
+    required String heading,
+    required String maxValue,
+    required String avgValue,
+    required bool isMobile,
+  }) {
+    final headingSize = isMobile ? 22.0 : 28.0;
+    final labelSize = isMobile ? 17.0 : 21.0;
+    final valueSize = isMobile ? 34.0 : 46.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          heading,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.w700),
+        ),
+        SizedBox(height: isMobile ? 10 : 12),
+        Text(
+          'Maximum',
+          style: TextStyle(fontSize: labelSize, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: isMobile ? 4 : 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            maxValue,
+            style: TextStyle(fontSize: valueSize, fontWeight: FontWeight.w800),
           ),
-        ],
-      ),
+        ),
+        SizedBox(height: isMobile ? 12 : 14),
+        Text(
+          'Average',
+          style: TextStyle(fontSize: labelSize, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: isMobile ? 4 : 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            avgValue,
+            style: TextStyle(fontSize: valueSize, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
     );
   }
 }
