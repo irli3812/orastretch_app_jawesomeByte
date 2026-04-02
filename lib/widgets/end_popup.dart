@@ -87,15 +87,12 @@ class EndSessionPopup extends StatelessWidget {
         ? rows.map((r) => r.biteForce).reduce((a, b) => a + b) / rows.length
         : 0;
 
-    final int maxMouthOpening = hasData
-        ? rows
-              .map((r) => r.mouthOpening)
-              .reduce((a, b) => a > b ? a : b)
-              .toInt()
+    final int maxMio = hasData
+        ? rows.map((r) => r.mio).reduce((a, b) => a > b ? a : b).toInt()
         : 0;
 
-    final double avgMouthOpening = hasData
-        ? rows.map((r) => r.mouthOpening).reduce((a, b) => a + b) / rows.length
+    final double avgMio = hasData
+        ? rows.map((r) => r.mio).reduce((a, b) => a + b) / rows.length
         : 0;
 
     return Dialog(
@@ -137,13 +134,8 @@ class EndSessionPopup extends StatelessWidget {
                     14,
                     16,
                   ),
-                  _summaryRow('Max mouth', '$maxMouthOpening mm', 14, 16),
-                  _summaryRow(
-                    'Avg mouth',
-                    avgMouthOpening.toStringAsFixed(1),
-                    14,
-                    16,
-                  ),
+                  _summaryRow('Max mouth', '$maxMio mm', 14, 16),
+                  _summaryRow('Avg mouth', avgMio.toStringAsFixed(1), 14, 16),
                   const SizedBox(height: 16),
                   Text(
                     'Deleting session will permanently remove the recorded data.',

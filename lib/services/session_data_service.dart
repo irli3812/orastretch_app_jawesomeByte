@@ -13,12 +13,12 @@ import 'package:hive/hive.dart';
 class SessionRow {
   final int elapsedMs;
   final int biteForce;
-  final int mouthOpening;
+  final int mio;
 
   SessionRow({
     required this.elapsedMs,
     required this.biteForce,
-    required this.mouthOpening,
+    required this.mio,
   });
 }
 
@@ -36,6 +36,7 @@ class SessionDataService extends ChangeNotifier {
   static const _biteCurrentSeriesKey = 'bite_forces_current_series';
   static const _biteAvgSeriesKey = 'bite_force_avg_series';
   static const _biteMaxSeriesKey = 'bite_force_max_series';
+  static const _biteSensorRunningMaxKey = 'bite_sensor_running_max';
 
   static const _batteryKey = 'batteryPercent';
   static const _sessionStartTimeKey = 'session_start_time';
@@ -71,7 +72,7 @@ class SessionDataService extends ChangeNotifier {
           return SessionRow(
             elapsedMs: (e['time_ms'] as num).toInt(),
             biteForce: ((e['avg_bite_force'] ?? 0) as num).toInt(),
-            mouthOpening: (e['mouth_opening'] as num).toInt(),
+            mio: (e['mouth_opening'] as num).toInt(),
           );
         })
         .toList(growable: false);
@@ -196,6 +197,29 @@ class SessionDataService extends ChangeNotifier {
     });
 
     _box.put('session', session);
+
+    final List<dynamic> runningMaxRaw = List<dynamic>.from(
+      _box.get(
+        _biteSensorRunningMaxKey,
+        defaultValue: List<double>.filled(20, double.negativeInfinity),
+      ),
+    );
+    if (runningMaxRaw.length != 20) {
+      runningMaxRaw
+        ..clear()
+        ..addAll(List<double>.filled(20, double.negativeInfinity));
+    }
+
+    for (int i = 0; i < 20; i++) {
+      final current = runningMaxRaw[i] is num
+          ? (runningMaxRaw[i] as num).toDouble()
+          : double.negativeInfinity;
+      if (bites[i] > current) {
+        runningMaxRaw[i] = bites[i];
+      }
+    }
+    _box.put(_biteSensorRunningMaxKey, runningMaxRaw);
+
     _box.put(_batteryKey, battery);
 
     notifyListeners();
@@ -227,6 +251,10 @@ class SessionDataService extends ChangeNotifier {
     _box.put(_biteCurrentSeriesKey, []);
     _box.put(_biteAvgSeriesKey, []);
     _box.put(_biteMaxSeriesKey, []);
+    _box.put(
+      _biteSensorRunningMaxKey,
+      List<double>.filled(20, double.negativeInfinity),
+    );
     _box.put('session', []);
     final now = DateTime.now();
     _box.put(_sessionStartTimeKey, _formatTimeOfDay(now));
@@ -251,6 +279,7 @@ class SessionDataService extends ChangeNotifier {
     _box.delete(_biteCurrentSeriesKey);
     _box.delete(_biteAvgSeriesKey);
     _box.delete(_biteMaxSeriesKey);
+    _box.delete(_biteSensorRunningMaxKey);
     _box.delete(_sessionStartTimeKey);
     _box.delete(_sessionStartTimePreciseKey);
     _box.put('is_recording', false);

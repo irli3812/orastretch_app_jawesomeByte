@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// RESPONSIVE BLE DATA TABLE
-/// 
+///
 /// IMPLEMENTATION NOTES:
 /// - Mobile (<600dp): Use TabBarView to switch between tables
 /// - Desktop (≥600dp): Use Row with side-by-side layout
@@ -75,7 +75,7 @@ class _BLEdataState extends State<BLEdata> {
                           final row = session[index];
 
                           final int time = (row['time_ms'] ?? 0) as int;
-                          final double mouth = (row['mouth_opening'] ?? 0)
+                          final double mio = (row['mouth_opening'] ?? 0)
                               .toDouble();
 
                           return Padding(
@@ -86,7 +86,7 @@ class _BLEdataState extends State<BLEdata> {
                             child: Row(
                               children: [
                                 Expanded(child: Text(time.toString())),
-                                Expanded(child: Text(mouth.toStringAsFixed(2))),
+                                Expanded(child: Text(mio.toStringAsFixed(2))),
                               ],
                             ),
                           );

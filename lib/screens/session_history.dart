@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -81,6 +83,17 @@ class _SessionHistoryState extends State<SessionHistory> {
     return '--';
   }
 
+  String _formatBiteForceForDetails(dynamic raw) {
+    if (raw == null) return '--';
+    if (raw is! num) return '--';
+
+    final formatted = raw
+        .toStringAsFixed(3)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+    return '${formatted}N';
+  }
+
   int? _secondsSinceMidnight(String? value) {
     if (value == null) return null;
 
@@ -128,6 +141,7 @@ class _SessionHistoryState extends State<SessionHistory> {
     required String name,
     required DateTime createdAt,
     required int sessionNumber,
+    required String maxBiteForDetails,
     required String? startTime,
     required String? endTime,
     required String? startTimePrecise,
@@ -185,6 +199,14 @@ class _SessionHistoryState extends State<SessionHistory> {
               const SizedBox(height: 4),
               Text(
                 'Duration: $durationText',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Max bite force: $maxBiteForDetails',
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
@@ -365,17 +387,17 @@ class _SessionHistoryState extends State<SessionHistory> {
                         sessionNumsByKey[entries[index].key] ?? 1;
 
                     final maxBite = _metricValue(map['max_bite_force'], 'N');
-                    final maxMouth = _metricValue(
-                      map['max_mouth_opening'],
-                      'mm',
+                    final maxBiteForDetails = _formatBiteForceForDetails(
+                      map['max_bite_force'],
                     );
+                    final maxMio = _metricValue(map['max_mouth_opening'], 'mm');
                     final startTime = map['start_time'] as String?;
                     final endTime = map['end_time'] as String?;
                     final startTimePrecise =
                         map['start_time_precise'] as String?;
                     final endTimePrecise = map['end_time_precise'] as String?;
                     final displayName = name;
-                    final metricText = '$maxBite/$maxMouth';
+                    final metricText = '$maxBite/$maxMio';
 
                     return SizedBox(
                       height: buttonHeight,
@@ -399,6 +421,7 @@ class _SessionHistoryState extends State<SessionHistory> {
                             name: name,
                             createdAt: createdAt,
                             sessionNumber: sessionNumber,
+                            maxBiteForDetails: maxBiteForDetails,
                             startTime: startTime,
                             endTime: endTime,
                             startTimePrecise: startTimePrecise,

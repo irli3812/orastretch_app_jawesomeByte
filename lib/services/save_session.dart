@@ -5,6 +5,7 @@ class SaveSessionService {
   static const String appBoxName = 'appBox';
   static const String sessionStartTimeKey = 'session_start_time';
   static const String sessionStartTimePreciseKey = 'session_start_time_precise';
+  static const String biteSensorRunningMaxKey = 'bite_sensor_running_max';
 
   String defaultSessionName() {
     final now = DateTime.now();
@@ -64,6 +65,37 @@ class SaveSessionService {
         ? savedStartPrecise
         : null;
 
+    final List<dynamic> runningMaxRaw = List<dynamic>.from(
+      appBox.get(
+        biteSensorRunningMaxKey,
+        defaultValue: List<double>.filled(20, double.negativeInfinity),
+      ),
+    );
+    final sensorMaxes = List<double>.filled(20, double.negativeInfinity);
+    for (int i = 0; i < 20 && i < runningMaxRaw.length; i++) {
+      final v = runningMaxRaw[i];
+      if (v is num) {
+        sensorMaxes[i] = v.toDouble();
+      }
+    }
+
+    final validMaxes = sensorMaxes
+        .where((v) => v.isFinite && v != double.negativeInfinity)
+        .toList(growable: false);
+    final double? avgOfSensorMaxes = validMaxes.length == 20
+        ? validMaxes.reduce((a, b) => a + b) / 20.0
+        : null;
+
+    final List<dynamic> mioMaxSeries = List<dynamic>.from(
+      appBox.get('mouth_opening_max_series', defaultValue: <dynamic>[]),
+    );
+    final dynamic latestMioMaxRaw = mioMaxSeries.isNotEmpty
+        ? mioMaxSeries.last
+        : null;
+    final double? latestMioMax = latestMioMaxRaw is num
+        ? latestMioMaxRaw.toDouble()
+        : null;
+
     final Map<String, dynamic> row = {
       'name': trimmedName,
       'created_at_epoch_ms': now.millisecondsSinceEpoch,
@@ -71,8 +103,8 @@ class SaveSessionService {
       'end_time': endTime,
       'start_time_precise': startTimePrecise,
       'end_time_precise': endTimePrecise,
-      'max_bite_force': null,
-      'max_mouth_opening': null,
+      'max_bite_force': avgOfSensorMaxes,
+      'max_mouth_opening': latestMioMax,
       'strain_gauge_01_max': null,
       'strain_gauge_02_max': null,
       'strain_gauge_03_max': null,
@@ -96,6 +128,7 @@ class SaveSessionService {
     };
 
     await box.add(row);
+    await appBox.delete(biteSensorRunningMaxKey);
   }
 
   String _formatTimeOfDay(DateTime dt) {
