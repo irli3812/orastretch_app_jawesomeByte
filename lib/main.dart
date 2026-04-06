@@ -274,71 +274,66 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   const BatteryStatus(),
                   const SizedBox(width: 8),
-                  Material(
-                    elevation: 4,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: BluetoothButton(
-                      isConnected: isBluetoothConnected,
-                      onConnectionChange: (isConnected) {
-                        setState(() {
-                          isBluetoothConnected = isConnected;
-                        });
-                      },
-                      onDeviceSelected: (device) async {
-                        if (device == null) return;
-                        try {
-                          // Retry service discovery (iOS needs this)
-                          const maxRetries = 3;
-                          final services = await _discoverServicesWithRetry(
-                            device,
-                            maxRetries,
-                          );
+                  BluetoothButton(
+                    isConnected: isBluetoothConnected,
+                    onConnectionChange: (isConnected) {
+                      setState(() {
+                        isBluetoothConnected = isConnected;
+                      });
+                    },
+                    onDeviceSelected: (device) async {
+                      if (device == null) return;
+                      try {
+                        // Retry service discovery (iOS needs this)
+                        const maxRetries = 3;
+                        final services = await _discoverServicesWithRetry(
+                          device,
+                          maxRetries,
+                        );
 
-                          BluetoothCharacteristic? chosen;
+                        BluetoothCharacteristic? chosen;
+                        for (final s in services) {
+                          for (final c in s.characteristics) {
+                            if (c.properties.notify) {
+                              chosen = c;
+                              break;
+                            }
+                          }
+                          if (chosen != null) break;
+                        }
+                        if (chosen == null) {
                           for (final s in services) {
-                            for (final c in s.characteristics) {
-                              if (c.properties.notify) {
-                                chosen = c;
-                                break;
-                              }
-                            }
-                            if (chosen != null) break;
-                          }
-                          if (chosen == null) {
-                            for (final s in services) {
-                              if (s.characteristics.isNotEmpty) {
-                                chosen = s.characteristics.first;
-                                break;
-                              }
+                            if (s.characteristics.isNotEmpty) {
+                              chosen = s.characteristics.first;
+                              break;
                             }
                           }
-                          if (chosen != null) {
-                            SessionDataService().attachBleCharacteristics(
-                              chosen,
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'No notifiable characteristic found on device.',
-                                ),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        } catch (e) {
+                        }
+                        if (chosen != null) {
+                          SessionDataService().attachBleCharacteristics(
+                            chosen,
+                          );
+                        } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text(
-                                'Error discovering characteristics: ${e.toString()}',
+                                'No notifiable characteristic found on device.',
                               ),
-                              duration: const Duration(seconds: 3),
+                              duration: Duration(seconds: 3),
                             ),
                           );
                         }
-                      },
-                    ),
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Error discovering characteristics: ${e.toString()}',
+                            ),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ],
               ),
