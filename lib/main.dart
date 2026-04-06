@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, unnecessary_import
 import 'dart:io' show Platform;
 import 'dart:math' show max;
 import 'package:flutter/material.dart';
