@@ -416,7 +416,7 @@ class _SimplePainter extends CustomPainter {
 
     const int yTicks = 5;
     for (int i = 0; i <= yTicks; i++) {
-      final v = bfGaugeMin + (i / yTicks) * (bfGaugeMax - bfGaugeMin);
+      final v = bfMin + (i / yTicks) * (bfMax - bfMin);
       final y = height - (i / yTicks) * height;
 
       canvas.drawLine(Offset(leftPad, y), Offset(leftPad + 5, y), axisPaint);
@@ -467,7 +467,7 @@ class _SimplePainter extends CustomPainter {
     Offset scale(Offset p) {
       final x = leftPad + ((p.dx - minTime) / timeRange) * width;
       final y =
-          height - ((p.dy - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)) * height;
+          height - ((p.dy - bfMin) / (bfMax - bfMin)) * height;
       return Offset(x, y);
     }
 

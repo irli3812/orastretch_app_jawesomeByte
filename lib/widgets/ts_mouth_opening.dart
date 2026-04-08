@@ -152,7 +152,7 @@ class _MouthOpeningPainter extends CustomPainter {
 
     const int yTicks = 5;
     for (int i = 0; i <= yTicks; i++) {
-      final v = gaugeMin + (i / yTicks) * (gaugeMax - gaugeMin);
+      final v = mioMin + (i / yTicks) * (mioMax - mioMin);
 
       final y = height - (i / yTicks) * height;
 
@@ -206,7 +206,7 @@ class _MouthOpeningPainter extends CustomPainter {
     Offset scale(Offset p) {
       final x = leftPad + ((p.dx - minTime) / timeRange) * width;
 
-      final y = height - ((p.dy - gaugeMin) / (gaugeMax - gaugeMin)) * height;
+      final y = height - ((p.dy - mioMin) / (mioMax - mioMin)) * height;
 
       return Offset(x, y);
     }

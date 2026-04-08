@@ -116,17 +116,17 @@ class ResponsiveSize {
   }
 }
 
-/// Global Meter Gauge Limits RECORD MOUTH OPENING
-const double gaugeMin = -180.0;
-const double gaugeMax = 180.0;
-const int minorDivisions = 12;
-const int majorDivisions = 2;
+/// Global Meter Gauge Limits RECORD MOUTH OPENING (MIO)
+const double mioMin = 0.0;
+const double mioMax = 50.0;
+const int mioMinorDivs = 10;
+const int mioMajorDivs = 2;
 
 /// Global Meter Gauge Limits RECORD BITE FORCE (BF)
-const double bfGaugeMin = 0.0;
-const double bfGaugeMax = 150.0;
-const int bfMinorDivisions = 15;
-const int bfMajorDivisions = 5;
+const double bfMin = 0.0;
+const double bfMax = 150.0;
+const int bfMinorDivs = 15;
+const int bfMajorDivs = 5;
 
 Widget getPlatformWidget() {
   String platformText;

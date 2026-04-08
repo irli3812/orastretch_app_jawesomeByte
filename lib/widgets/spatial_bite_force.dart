@@ -101,21 +101,21 @@ class SpatialBiteForce extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${bfGaugeMin.toStringAsFixed(0)} N',
+              '${bfMin.toStringAsFixed(0)} N',
               style: TextStyle(
                 fontSize: isMobile ? 22 : 30,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
-              '${((bfGaugeMin + bfGaugeMax) / 2).toStringAsFixed(0)} N',
+              '${((bfMin + bfMax) / 2).toStringAsFixed(0)} N',
               style: TextStyle(
                 fontSize: isMobile ? 22 : 30,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
-              '${bfGaugeMax.toStringAsFixed(0)} N',
+              '${bfMax.toStringAsFixed(0)} N',
               style: TextStyle(
                 fontSize: isMobile ? 22 : 30,
                 fontWeight: FontWeight.w700,
@@ -307,7 +307,7 @@ class SpatialBiteForce extends StatelessWidget {
 
   // ===== COLOR SCALE =====
   Color _valueToColor(double value) {
-    final normalized = ((value - bfGaugeMin) / (bfGaugeMax - bfGaugeMin)).clamp(
+    final normalized = ((value - bfMin) / (bfMax - bfMin)).clamp(
       0.0,
       1.0,
     );

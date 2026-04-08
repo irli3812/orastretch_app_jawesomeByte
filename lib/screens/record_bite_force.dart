@@ -352,14 +352,14 @@ class _BiteForceGaugePainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = isMobile ? 1.5 : 2;
 
-    for (int step = 0; step <= bfMinorDivisions; step++) {
+    for (int step = 0; step <= bfMinorDivs; step++) {
       final double valueTick =
-          bfGaugeMin + (step / bfMinorDivisions) * (bfGaugeMax - bfGaugeMin);
+          bfMin + (step / bfMinorDivs) * (bfMax - bfMin);
 
-      final double t = (valueTick - bfGaugeMin) / (bfGaugeMax - bfGaugeMin);
+      final double t = (valueTick - bfMin) / (bfMax - bfMin);
       final double angle = pi + t * pi;
 
-      final bool major = step % bfMajorDivisions == 0;
+      final bool major = step % bfMajorDivs == 0;
 
       // Draw ticks across the arc band so they sit on top of the meter colors.
       final double startR = radius * (major ? 0.88 : 0.92);
@@ -379,9 +379,9 @@ class _BiteForceGaugePainter extends CustomPainter {
     }
 
     // ===== Needle =====
-    final double clamped = (value.clamp(bfGaugeMin, bfGaugeMax)).toDouble();
+    final double clamped = (value.clamp(bfMin, bfMax)).toDouble();
     final double normalized =
-        (clamped - bfGaugeMin) / (bfGaugeMax - bfGaugeMin);
+        (clamped - bfMin) / (bfMax - bfMin);
     final double angle = pi + normalized * pi;
 
     final needlePaint = Paint()
@@ -397,10 +397,10 @@ class _BiteForceGaugePainter extends CustomPainter {
     canvas.drawCircle(center, isMobile ? 4 : 6, Paint()..color = Colors.black);
 
     // ===== Numeric labels right under tick marks =====
-    for (int step = 0; step <= bfMinorDivisions; step += bfMajorDivisions) {
+    for (int step = 0; step <= bfMinorDivs; step += bfMajorDivs) {
       final double valueTick =
-          bfGaugeMin + (step / bfMinorDivisions) * (bfGaugeMax - bfGaugeMin);
-      final double t = step / bfMinorDivisions;
+          bfMin + (step / bfMinorDivs) * (bfMax - bfMin);
+      final double t = step / bfMinorDivs;
       final double labelAngle = pi + t * pi;
       final tp = TextPainter(
         text: TextSpan(

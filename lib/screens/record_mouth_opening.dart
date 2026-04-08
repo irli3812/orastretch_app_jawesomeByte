@@ -313,14 +313,16 @@ class _SemiGaugePainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = isMobile ? 1.5 : 2;
 
-    for (int step = 0; step <= minorDivisions; step++) {
-      final double val =
-          gaugeMin + (step / minorDivisions) * (gaugeMax - gaugeMin);
+    // We'll calculate angle from the normalized value in the needle section
+    // For now, just draw the ticks without angle calculation
+    for (int step = 0; step <= mioMinorDivs; step++) {
+      final double valueTick =
+          mioMin + (step / mioMinorDivs) * (mioMax - mioMin);
 
-      final double t = (val - gaugeMin) / (gaugeMax - gaugeMin);
+      final double t = (valueTick - mioMin) / (mioMax - mioMin);
       final double angle = pi + t * pi;
 
-      final bool major = step % majorDivisions == 0;
+      final bool major = step % mioMajorDivs == 0;
 
       // Draw ticks across the arc band so they sit on top of the meter colors.
       final double startR = radius * (major ? 0.88 : 0.92);
@@ -340,8 +342,8 @@ class _SemiGaugePainter extends CustomPainter {
     }
 
     // ===== Needle =====
-    final double clamped = value.clamp(gaugeMin, gaugeMax).toDouble();
-    final double normalized = (clamped - gaugeMin) / (gaugeMax - gaugeMin);
+    final double clamped = value.clamp(mioMin, mioMax).toDouble();
+    final double normalized = (clamped - mioMin) / (mioMax - mioMin);
     final double angle = pi + normalized * pi;
 
     final needlePaint = Paint()
@@ -358,10 +360,10 @@ class _SemiGaugePainter extends CustomPainter {
     canvas.drawCircle(center, isMobile ? 4 : 6, Paint()..color = Colors.black);
 
     // ===== Numeric labels right under tick marks =====
-    for (int step = 0; step <= minorDivisions; step += majorDivisions) {
+    for (int step = 0; step <= mioMinorDivs; step += mioMajorDivs) {
       final double val =
-          gaugeMin + (step / minorDivisions) * (gaugeMax - gaugeMin);
-      final double t = step / minorDivisions;
+          mioMin + (step / mioMinorDivs) * (mioMax - mioMin);
+      final double t = step / mioMinorDivs;
       final double labelAngle = pi + t * pi;
       final tp = TextPainter(
         text: TextSpan(
