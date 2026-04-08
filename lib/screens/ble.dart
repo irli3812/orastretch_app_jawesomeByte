@@ -51,6 +51,13 @@ class _BLEdataState extends State<BLEdata> {
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
+
+                      Expanded(
+                        child: Text(
+                          'Max MIO',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -77,6 +84,8 @@ class _BLEdataState extends State<BLEdata> {
                           final int time = (row['time_ms'] ?? 0) as int;
                           final double mio = (row['mouth_opening'] ?? 0)
                               .toDouble();
+                            final double maxMio = (row['max_mouth_opening'] ?? 0)
+                              .toDouble();
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(
@@ -87,6 +96,9 @@ class _BLEdataState extends State<BLEdata> {
                               children: [
                                 Expanded(child: Text(time.toString())),
                                 Expanded(child: Text(mio.toStringAsFixed(2))),
+                                Expanded(
+                                  child: Text(maxMio.toStringAsFixed(2)),
+                                ),
                               ],
                             ),
                           );
@@ -133,7 +145,7 @@ class _BLEdataState extends State<BLEdata> {
 
                       Expanded(
                         child: Text(
-                          'Max Bite',
+                          'Max Bite (Smart Avg)',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),

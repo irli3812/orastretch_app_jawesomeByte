@@ -267,33 +267,32 @@ void loop() {
 
     float topQuartileAvg = computeTopQuartileAvg(randomBites, NUM_BITES);
 
-
     // Timestamp
     unsigned long timestamp = millis();
 
-
     // Data buffer
     char dataBuffer[600];
-    int offset = 0;
 
+    snprintf(
+      dataBuffer,
+      sizeof(dataBuffer),
+      "%lu,%.2f,"
+      "%.2f,%.2f,%.2f,%.2f,%.2f,"
+      "%.2f,%.2f,%.2f,%.2f,%.2f,"
+      "%.2f,%.2f,%.2f,%.2f,%.2f,"
+      "%.2f,%.2f,%.2f,%.2f,%.2f,"
+      "%.2f,%.1f",
 
-    // Append quartile calc + battery
-    offset += snprintf(
-      dataBuffer + offset,
-      sizeof(dataBuffer) - offset,
-      ",%.2f,%.1f",
-      (unsigned int)timestamp,
-      distance);
+      timestamp,
+      distance,
 
-    // Append 20 bite forces
-    for (int i = 0; i < NUM_BITES; i++) {
+      randomBites[0], randomBites[1], randomBites[2], randomBites[3], randomBites[4],
+      randomBites[5], randomBites[6], randomBites[7], randomBites[8], randomBites[9],
+      randomBites[10], randomBites[11], randomBites[12], randomBites[13], randomBites[14],
+      randomBites[15], randomBites[16], randomBites[17], randomBites[18], randomBites[19],
 
-      offset += snprintf(
-        dataBuffer + offset,
-        sizeof(dataBuffer) - offset,
-        ",%.2f",
-        randomBites[i]);
-    }
+      topQuartileAvg,
+      batteryPercent);
 
     // Send data
     Serial.print("Sending Data: ");

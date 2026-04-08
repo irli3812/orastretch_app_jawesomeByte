@@ -30,9 +30,11 @@ class SessionDataService extends ChangeNotifier {
   static const _timeKey = 'time_series';
 
   static const _IOcurrentSeriesKey = 'mouth_opening_current_series';
+  static const _IOmaxSeriesKey = 'mouth_opening_running_max_series';
 
   static const _biteCurrentSeriesKey = 'bite_forces_current_series';
   static const _biteAvgSeriesKey = 'bite_force_avg_series';
+  static const _biteMaxSeriesKey = 'bite_force_running_max_series';
   static const _bitePacketCurrentMaxSeriesKey =
       'bite_force_current_packet_max_series';
   static const _biteSensorRunningMaxKey = 'bite_sensor_running_max';
@@ -119,6 +121,14 @@ class SessionDataService extends ChangeNotifier {
   }
 
   /// ─────────────────────────────────────────────
+  /// Max calcs
+  /// ─────────────────────────────────────────────
+  double _runningMax(double currentValue, double? previousMax) {
+    final prev = previousMax ?? double.negativeInfinity;
+    return currentValue > prev ? currentValue : prev;
+  }
+
+  /// ─────────────────────────────────────────────
   /// BLE data handler
   /// ─────────────────────────────────────────────
   double _findPacketBiteForceMax(List<double> bites) {
@@ -178,8 +188,16 @@ class SessionDataService extends ChangeNotifier {
     final List IOcurrentSeries = List.from(
       _box.get(_IOcurrentSeriesKey, defaultValue: []),
     );
+    final List IOmaxSeries = List.from(
+      _box.get(_IOmaxSeriesKey, defaultValue: []),
+    );
     IOcurrentSeries.add(mouthDistance);
+    final double? previousMioMax =
+        IOmaxSeries.isNotEmpty ? (IOmaxSeries.last as num).toDouble() : null;
+    final double runningMioMax = _runningMax(mouthDistance, previousMioMax);
+    IOmaxSeries.add(runningMioMax);
     _box.put(_IOcurrentSeriesKey, IOcurrentSeries);
+    _box.put(_IOmaxSeriesKey, IOmaxSeries);
 
     // Store bite force series
     final List biteCurrentSeries = List.from(
@@ -187,6 +205,9 @@ class SessionDataService extends ChangeNotifier {
     );
     final List smartAvgBites = List.from(
       _box.get(_biteAvgSeriesKey, defaultValue: []),
+    );
+    final List runningMaxSmartAvgBites = List.from(
+      _box.get(_biteMaxSeriesKey, defaultValue: []),
     );
     final List packetMaxBites = List.from(
       _box.get(_bitePacketCurrentMaxSeriesKey, defaultValue: []),
@@ -196,17 +217,27 @@ class SessionDataService extends ChangeNotifier {
 
     biteCurrentSeries.add(bites);
     smartAvgBites.add(smartBFAverage);
+    final double? previousBiteRunningMax = runningMaxSmartAvgBites.isNotEmpty
+      ? (runningMaxSmartAvgBites.last as num).toDouble()
+      : null;
+    final double runningSmartBfMax =
+      _runningMax(smartBFAverage, previousBiteRunningMax);
+    runningMaxSmartAvgBites.add(runningSmartBfMax);
     packetMaxBites.add(packetMaxBite);
 
     _box.put(_biteCurrentSeriesKey, biteCurrentSeries);
     _box.put(_biteAvgSeriesKey, smartAvgBites);
+    _box.put(_biteMaxSeriesKey, runningMaxSmartAvgBites);
     _box.put(_bitePacketCurrentMaxSeriesKey, packetMaxBites);
 
     final List session = List.from(_box.get('session', defaultValue: []));
 
     session.add({
       'time_ms': elapsed,
+      'avg_bite_force': smartBFAverage,
+      'max_bite_force': runningSmartBfMax,
       'mouth_opening': mouthDistance,
+      'max_mouth_opening': runningMioMax,
       'battery': battery,
       'bites': List.from(bites),
     });
@@ -261,8 +292,10 @@ class SessionDataService extends ChangeNotifier {
     _firstDeviceMillis = null;
     _box.put(_timeKey, []);
     _box.put(_IOcurrentSeriesKey, []);
+    _box.put(_IOmaxSeriesKey, []);
     _box.put(_biteCurrentSeriesKey, []);
     _box.put(_biteAvgSeriesKey, []);
+    _box.put(_biteMaxSeriesKey, []);
     _box.put(_bitePacketCurrentMaxSeriesKey, []);
     _box.put(
       _biteSensorRunningMaxKey,
@@ -287,8 +320,10 @@ class SessionDataService extends ChangeNotifier {
     _firstDeviceMillis = null;
     _box.delete(_timeKey);
     _box.delete(_IOcurrentSeriesKey);
+    _box.delete(_IOmaxSeriesKey);
     _box.delete(_biteCurrentSeriesKey);
     _box.delete(_biteAvgSeriesKey);
+    _box.delete(_biteMaxSeriesKey);
     _box.delete(_bitePacketCurrentMaxSeriesKey);
     _box.delete(_biteSensorRunningMaxKey);
     _box.delete(_sessionStartTimeKey);

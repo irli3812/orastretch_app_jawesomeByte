@@ -219,6 +219,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               keys: [
                 'session',
                 'bite_force_avg_series',
+                'bite_force_running_max_series',
                 'resetSignal',
                 'startSignal',
               ],
@@ -239,9 +240,16 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                 'bite_force_avg_series',
                 defaultValue: [],
               );
+              final List runningMaxSeries = box.get(
+                'bite_force_running_max_series',
+                defaultValue: [],
+              );
 
               final double latest = smartAvgSeries.isNotEmpty
                   ? (smartAvgSeries.last as num).toDouble()
+                  : 0.0;
+              final double maxValue = runningMaxSeries.isNotEmpty
+                  ? (runningMaxSeries.last as num).toDouble()
                   : 0.0;
 
               return Column(
@@ -263,6 +271,21 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                           ),
                         ),
                       ),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Max',
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: metricLabelSize,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: metricGap),
@@ -273,6 +296,18 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             latest.toStringAsFixed(1),
+                            maxLines: 1,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: metricValueSize),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            maxValue.toStringAsFixed(1),
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,
