@@ -84,16 +84,8 @@ class EndSessionPopup extends StatelessWidget {
         ? rows.map((r) => r.biteForce).reduce((a, b) => a > b ? a : b).toInt()
         : 0;
 
-    final double avgBiteForce = hasData
-        ? rows.map((r) => r.biteForce).reduce((a, b) => a + b) / rows.length
-        : 0;
-
     final int maxMio = hasData
         ? rows.map((r) => r.mio).reduce((a, b) => a > b ? a : b).toInt()
-        : 0;
-
-    final double avgMio = hasData
-        ? rows.map((r) => r.mio).reduce((a, b) => a + b) / rows.length
         : 0;
 
     return Dialog(
@@ -135,7 +127,6 @@ class EndSessionPopup extends StatelessWidget {
                         child: _metricColumn(
                           heading: 'Bite Force',
                           maxValue: '$maxBiteForce N',
-                          avgValue: '${avgBiteForce.toStringAsFixed(1)} N',
                           isMobile: isMobile,
                         ),
                       ),
@@ -144,7 +135,6 @@ class EndSessionPopup extends StatelessWidget {
                         child: _metricColumn(
                           heading: 'Mouth Opening',
                           maxValue: '$maxMio mm',
-                          avgValue: '${avgMio.toStringAsFixed(1)} mm',
                           isMobile: isMobile,
                         ),
                       ),
@@ -233,7 +223,6 @@ class EndSessionPopup extends StatelessWidget {
   static Widget _metricColumn({
     required String heading,
     required String maxValue,
-    required String avgValue,
     required bool isMobile,
   }) {
     final headingSize = isMobile ? 22.0 : 28.0;
@@ -258,19 +247,6 @@ class EndSessionPopup extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: Text(
             maxValue,
-            style: TextStyle(fontSize: valueSize, fontWeight: FontWeight.w800),
-          ),
-        ),
-        SizedBox(height: isMobile ? 12 : 14),
-        Text(
-          'Average',
-          style: TextStyle(fontSize: labelSize, fontWeight: FontWeight.w600),
-        ),
-        SizedBox(height: isMobile ? 4 : 6),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            avgValue,
             style: TextStyle(fontSize: valueSize, fontWeight: FontWeight.w800),
           ),
         ),

@@ -30,12 +30,9 @@ class SessionDataService extends ChangeNotifier {
   static const _timeKey = 'time_series';
 
   static const _IOcurrentSeriesKey = 'mouth_opening_current_series';
-  static const _IOavgSeriesKey = 'mouth_opening_avg_series';
-  static const _IOmaxSeriesKey = 'mouth_opening_max_series';
 
   static const _biteCurrentSeriesKey = 'bite_forces_current_series';
   static const _biteAvgSeriesKey = 'bite_force_avg_series';
-  static const _biteMaxSeriesKey = 'bite_force_max_series';
   static const _bitePacketCurrentMaxSeriesKey =
       'bite_force_current_packet_max_series';
   static const _biteSensorRunningMaxKey = 'bite_sensor_running_max';
@@ -144,13 +141,15 @@ class SessionDataService extends ChangeNotifier {
     debugPrint('📥 decoded: $raw');
 
     final parts = raw.split(',');
-    if (parts.length != 27) return;
+    if (parts.length != 24) return;
 
-    final int? deviceMillis = int.tryParse(parts[0]);
-    final double? angle = double.tryParse(parts[1]);
+    // Parse CSV format: timestamp, mouthDistance, bite1-bite20, smartBFAverage, battery
+    final int? timestamp = int.tryParse(parts[0]);
+    final double? mouthDistance = double.tryParse(parts[1]);
 
-    if (deviceMillis == null || angle == null) return;
+    if (timestamp == null || mouthDistance == null) return;
 
+    // Parse 20 bite force sensors (indices 2-21)
     final List<double> bites = [];
     for (int i = 2; i < 22; i++) {
       final b = double.tryParse(parts[i]);
@@ -158,80 +157,56 @@ class SessionDataService extends ChangeNotifier {
       bites.add(b);
     }
 
-    final double? avgAngle = double.tryParse(parts[22]);
-    final double? maxAngle = double.tryParse(parts[23]);
-    final double? avgBite = double.tryParse(parts[24]);
-    final double? maxBite = double.tryParse(parts[25]);
-    final double? battery = double.tryParse(parts[26]);
+    // Parse smart bite force average and battery
+    final double? smartBFAverage = double.tryParse(parts[22]);
+    final double? battery = double.tryParse(parts[23]);
 
-    if (avgAngle == null ||
-        maxAngle == null ||
-        avgBite == null ||
-        maxBite == null ||
-        battery == null) {
+    if (smartBFAverage == null || battery == null) {
       return;
     }
 
-    _firstDeviceMillis ??= deviceMillis;
+    _firstDeviceMillis ??= timestamp;
 
-    final int elapsed = deviceMillis - _firstDeviceMillis!;
+    final int elapsed = timestamp - _firstDeviceMillis!;
     if (elapsed < 0) return;
 
     final List times = List.from(_box.get(_timeKey, defaultValue: []));
     times.add(elapsed);
     _box.put(_timeKey, times);
 
+    // Store mouth opening (current distance only)
     final List IOcurrentSeries = List.from(
       _box.get(_IOcurrentSeriesKey, defaultValue: []),
     );
-    final List avgSeries = List.from(
-      _box.get(_IOavgSeriesKey, defaultValue: []),
-    );
-    final List maxSeries = List.from(
-      _box.get(_IOmaxSeriesKey, defaultValue: []),
-    );
-
-    IOcurrentSeries.add(angle);
-    avgSeries.add(avgAngle);
-    maxSeries.add(maxAngle);
-
+    IOcurrentSeries.add(mouthDistance);
     _box.put(_IOcurrentSeriesKey, IOcurrentSeries);
-    _box.put(_IOavgSeriesKey, avgSeries);
-    _box.put(_IOmaxSeriesKey, maxSeries);
 
+    // Store bite force series
     final List biteCurrentSeries = List.from(
       _box.get(_biteCurrentSeriesKey, defaultValue: []),
     );
-    final List avgBites = List.from(
+    final List smartAvgBites = List.from(
       _box.get(_biteAvgSeriesKey, defaultValue: []),
-    );
-    final List maxBites = List.from(
-      _box.get(_biteMaxSeriesKey, defaultValue: []),
     );
     final List packetMaxBites = List.from(
       _box.get(_bitePacketCurrentMaxSeriesKey, defaultValue: []),
     );
+    
     final double packetMaxBite = _findPacketBiteForceMax(bites);
 
     biteCurrentSeries.add(bites);
-    avgBites.add(avgBite);
-    maxBites.add(maxBite);
+    smartAvgBites.add(smartBFAverage);
     packetMaxBites.add(packetMaxBite);
 
     _box.put(_biteCurrentSeriesKey, biteCurrentSeries);
-    _box.put(_biteAvgSeriesKey, avgBites);
-    _box.put(_biteMaxSeriesKey, maxBites);
+    _box.put(_biteAvgSeriesKey, smartAvgBites);
     _box.put(_bitePacketCurrentMaxSeriesKey, packetMaxBites);
 
     final List session = List.from(_box.get('session', defaultValue: []));
 
     session.add({
       'time_ms': elapsed,
-      'avg_bite_force': avgBite,
-      'max_bite_force': maxBite,
-      'mouth_opening': angle,
-      'avg_mouth_opening': avgAngle,
-      'max_mouth_opening': maxAngle,
+      'mouth_opening': mouthDistance,
       'battery': battery,
       'bites': List.from(bites),
     });
@@ -264,7 +239,7 @@ class SessionDataService extends ChangeNotifier {
 
     notifyListeners();
 
-    debugPrint("angle=$angle avgBite=$avgBite maxBite=$maxBite");
+    debugPrint("mouthDistance=$mouthDistance smartBFAverage=$smartBFAverage packetMaxBite=$packetMaxBite battery=$battery");
   }
 
   /// ─────────────────────────────────────────────
@@ -286,11 +261,8 @@ class SessionDataService extends ChangeNotifier {
     _firstDeviceMillis = null;
     _box.put(_timeKey, []);
     _box.put(_IOcurrentSeriesKey, []);
-    _box.put(_IOavgSeriesKey, []);
-    _box.put(_IOmaxSeriesKey, []);
     _box.put(_biteCurrentSeriesKey, []);
     _box.put(_biteAvgSeriesKey, []);
-    _box.put(_biteMaxSeriesKey, []);
     _box.put(_bitePacketCurrentMaxSeriesKey, []);
     _box.put(
       _biteSensorRunningMaxKey,
@@ -315,11 +287,8 @@ class SessionDataService extends ChangeNotifier {
     _firstDeviceMillis = null;
     _box.delete(_timeKey);
     _box.delete(_IOcurrentSeriesKey);
-    _box.delete(_IOavgSeriesKey);
-    _box.delete(_IOmaxSeriesKey);
     _box.delete(_biteCurrentSeriesKey);
     _box.delete(_biteAvgSeriesKey);
-    _box.delete(_biteMaxSeriesKey);
     _box.delete(_bitePacketCurrentMaxSeriesKey);
     _box.delete(_biteSensorRunningMaxKey);
     _box.delete(_sessionStartTimeKey);

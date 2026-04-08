@@ -158,8 +158,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                     valueListenable: box.listenable(
                       keys: [
                         'mouth_opening_current_series',
-                        'mouth_opening_max_series',
-                        'mouth_opening_avg_series',
                         'resetSignal',
                         'startSignal',
                       ],
@@ -193,9 +191,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
             valueListenable: box.listenable(
               keys: [
                 'mouth_opening_current_series',
-                'mouth_opening_avg_series',
-                'mouth_opening_max_series',
-                'mouth_opening_max_series',
                 'resetSignal',
                 'startSignal',
               ],
@@ -204,24 +199,10 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
               final List currentSeries = List.from(
                 box.get('mouth_opening_current_series', defaultValue: []),
               );
-              final List avgSeries = List.from(
-                box.get('mouth_opening_avg_series', defaultValue: []),
-              );
-              final List maxSeries = List.from(
-                box.get('mouth_opening_max_series', defaultValue: []),
-              );
 
               final double value = currentSeries.isEmpty
                   ? 0
                   : (currentSeries.last as num).toDouble();
-
-              final double avg = avgSeries.isEmpty
-                  ? 0
-                  : (avgSeries.last as num).toDouble();
-
-              final double maxValue = maxSeries.isEmpty
-                  ? 0
-                  : (maxSeries.last as num).toDouble();
 
               return Column(
                 children: [
@@ -242,36 +223,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Max',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: metricLabelSize,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Average',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: metricLabelSize,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                   SizedBox(height: metricGap),
@@ -282,30 +233,6 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             '$value',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: metricValueSize),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '$maxValue',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: metricValueSize),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            avg.toStringAsFixed(1),
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,

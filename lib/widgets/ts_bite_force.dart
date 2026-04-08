@@ -448,7 +448,7 @@ class _SimplePainter extends CustomPainter {
 
     final yLabel = TextPainter(
       text: const TextSpan(
-        text: "Average bite force of region(s) (N)",
+        text: "Bite Force of Region(s) (N)",
         style: TextStyle(
           color: Colors.black,
           fontSize: 18,

@@ -91,6 +91,36 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
+// --- Helper: Compute Top Quartile Average ---
+float computeTopQuartileAvg(float* data, int size) {
+
+  // Copy array so we don't modify original
+  float temp[size];
+
+  for (int i = 0; i < size; i++) {
+    temp[i] = data[i];
+  }
+
+  // Simple bubble sort (small array, fast enough)
+  for (int i = 0; i < size - 1; i++) {
+    for (int j = 0; j < size - i - 1; j++) {
+      if (temp[j] > temp[j + 1]) {
+        float t = temp[j];
+        temp[j] = temp[j + 1];
+        temp[j + 1] = t;
+      }
+    }
+  }
+
+  int quartileSize = size / 4;  // Top 25%
+  float sum = 0.0;
+
+  for (int i = size - quartileSize; i < size; i++) {
+    sum += temp[i];
+  }
+
+  return sum / quartileSize;
+}
 
 // --- 6. INITIALIZATION ---
 void setup() {
@@ -221,7 +251,6 @@ void loop() {
 
     // --- Generate 20 random bite forces (0-150) ---
     for (int i = 0; i < NUM_BITES; i++) {
-
       uint32_t biteRand = esp_random();
       float biteNormalized = (float)biteRand / UINT32_MAX_F;
 
@@ -236,9 +265,7 @@ void loop() {
       biteCount++;
     }
 
-
-    float avgAngle = angleSum / angleCount;
-    float avgBite = biteSum / biteCount;
+    float topQuartileAvg = computeTopQuartileAvg(randomBites, NUM_BITES);
 
 
     // Timestamp
@@ -250,13 +277,13 @@ void loop() {
     int offset = 0;
 
 
+    // Append quartile calc + battery
     offset += snprintf(
       dataBuffer + offset,
       sizeof(dataBuffer) - offset,
-      "%lu,%.2f",
+      ",%.2f,%.1f",
       (unsigned int)timestamp,
       distance);
-
 
     // Append 20 bite forces
     for (int i = 0; i < NUM_BITES; i++) {
@@ -267,19 +294,6 @@ void loop() {
         ",%.2f",
         randomBites[i]);
     }
-
-
-    // Append stats + battery
-    offset += snprintf(
-      dataBuffer + offset,
-      sizeof(dataBuffer) - offset,
-      ",%.2f,%.2f,%.2f,%.2f,%.1f",
-      avgAngle,
-      angleMax,
-      avgBite,
-      biteMax,
-      batteryPercent);
-
 
     // Send data
     Serial.print("Sending Data: ");

@@ -173,7 +173,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                       keys: [
                         'session',
                         'startSignal',
-                        'bite_force_current_packet_max_series',
+                        'bite_force_avg_series',
                       ],
                     ),
                     builder: (context, _, __) {
@@ -190,18 +190,18 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                         _lastStartSignal = startSignal;
                       }
 
-                      final List packetMaxSeries = box.get(
-                        'bite_force_current_packet_max_series',
+                      final List smartAvgSeries = box.get(
+                        'bite_force_avg_series',
                         defaultValue: [],
                       );
 
-                      final latestPacketMax = packetMaxSeries.isEmpty
+                      final latest = smartAvgSeries.isEmpty
                           ? 0.0
-                          : (packetMaxSeries.last as num).toDouble();
+                          : (smartAvgSeries.last as num).toDouble();
 
                       return SizedBox.expand(
                         child: CustomPaint(
-                          painter: _BiteForceGaugePainter(value: latestPacketMax),
+                          painter: _BiteForceGaugePainter(value: latest),
                         ),
                       );
                     },
@@ -219,8 +219,6 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
               keys: [
                 'session',
                 'bite_force_avg_series',
-                'bite_force_max_series',
-                'bite_force_current_packet_max_series',
                 'resetSignal',
                 'startSignal',
               ],
@@ -237,38 +235,14 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                 _lastStartSignal = startSignal;
               }
 
-              final List avgSeries = box.get(
+              final List smartAvgSeries = box.get(
                 'bite_force_avg_series',
                 defaultValue: [],
               );
 
-              final List packetMaxSeries = box.get(
-                'bite_force_current_packet_max_series',
-                defaultValue: [],
-              );
-
-              final double latest = packetMaxSeries.isNotEmpty
-                  ? (packetMaxSeries.last as num).toDouble()
+              final double latest = smartAvgSeries.isNotEmpty
+                  ? (smartAvgSeries.last as num).toDouble()
                   : 0.0;
-
-              double avg = 0.0;
-              if (avgSeries.isNotEmpty) {
-                final sum = avgSeries.fold<double>(
-                  0.0,
-                  (p, e) => p + (e as num).toDouble(),
-                );
-                avg = sum / avgSeries.length;
-              }
-
-              final List maxSeries = box.get(
-                'bite_force_max_series',
-                defaultValue: [],
-              );
-
-              double max = 0;
-              if (maxSeries.isNotEmpty) {
-                max = (maxSeries.last as num).toDouble();
-              }
 
               return Column(
                 children: [
@@ -289,36 +263,6 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Max',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: metricLabelSize,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Average',
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: metricLabelSize,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                   SizedBox(height: metricGap),
@@ -329,30 +273,6 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             latest.toStringAsFixed(1),
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: metricValueSize),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            max.toStringAsFixed(1),
-                            maxLines: 1,
-                            softWrap: false,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: metricValueSize),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            avg.toStringAsFixed(1),
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,
