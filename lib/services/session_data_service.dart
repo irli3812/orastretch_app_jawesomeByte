@@ -35,8 +35,6 @@ class SessionDataService extends ChangeNotifier {
   static const _biteCurrentSeriesKey = 'bite_forces_current_series';
   static const _biteAvgSeriesKey = 'bite_force_avg_series';
   static const _biteMaxSeriesKey = 'bite_force_running_max_series';
-  static const _bitePacketCurrentMaxSeriesKey =
-      'bite_force_current_packet_max_series';
   static const _biteSensorRunningMaxKey = 'bite_sensor_running_max';
 
   static const _batteryKey = 'batteryPercent';
@@ -131,18 +129,6 @@ class SessionDataService extends ChangeNotifier {
   /// ─────────────────────────────────────────────
   /// BLE data handler
   /// ─────────────────────────────────────────────
-  double _findPacketBiteForceMax(List<double> bites) {
-    if (bites.isEmpty) return 0.0;
-
-    double packetMax = bites.first;
-    for (final value in bites) {
-      if (value > packetMax) {
-        packetMax = value;
-      }
-    }
-    return packetMax;
-  }
-
   void _onBleData(List<int> value) {
     if (!isRunning) return;
     if (value.isEmpty) return;
@@ -209,12 +195,6 @@ class SessionDataService extends ChangeNotifier {
     final List runningMaxSmartAvgBites = List.from(
       _box.get(_biteMaxSeriesKey, defaultValue: []),
     );
-    final List packetMaxBites = List.from(
-      _box.get(_bitePacketCurrentMaxSeriesKey, defaultValue: []),
-    );
-    
-    final double packetMaxBite = _findPacketBiteForceMax(bites);
-
     biteCurrentSeries.add(bites);
     smartAvgBites.add(smartBFAverage);
     final double? previousBiteRunningMax = runningMaxSmartAvgBites.isNotEmpty
@@ -223,12 +203,10 @@ class SessionDataService extends ChangeNotifier {
     final double runningSmartBfMax =
       _runningMax(smartBFAverage, previousBiteRunningMax);
     runningMaxSmartAvgBites.add(runningSmartBfMax);
-    packetMaxBites.add(packetMaxBite);
 
     _box.put(_biteCurrentSeriesKey, biteCurrentSeries);
     _box.put(_biteAvgSeriesKey, smartAvgBites);
     _box.put(_biteMaxSeriesKey, runningMaxSmartAvgBites);
-    _box.put(_bitePacketCurrentMaxSeriesKey, packetMaxBites);
 
     final List session = List.from(_box.get('session', defaultValue: []));
 
@@ -270,7 +248,7 @@ class SessionDataService extends ChangeNotifier {
 
     notifyListeners();
 
-    debugPrint("mouthDistance=$mouthDistance smartBFAverage=$smartBFAverage packetMaxBite=$packetMaxBite battery=$battery");
+    debugPrint("mouthDistance=$mouthDistance smartBFAverage=$smartBFAverage battery=$battery");
   }
 
   /// ─────────────────────────────────────────────
@@ -296,7 +274,6 @@ class SessionDataService extends ChangeNotifier {
     _box.put(_biteCurrentSeriesKey, []);
     _box.put(_biteAvgSeriesKey, []);
     _box.put(_biteMaxSeriesKey, []);
-    _box.put(_bitePacketCurrentMaxSeriesKey, []);
     _box.put(
       _biteSensorRunningMaxKey,
       List<double>.filled(20, double.negativeInfinity),
@@ -324,7 +301,6 @@ class SessionDataService extends ChangeNotifier {
     _box.delete(_biteCurrentSeriesKey);
     _box.delete(_biteAvgSeriesKey);
     _box.delete(_biteMaxSeriesKey);
-    _box.delete(_bitePacketCurrentMaxSeriesKey);
     _box.delete(_biteSensorRunningMaxKey);
     _box.delete(_sessionStartTimeKey);
     _box.delete(_sessionStartTimePreciseKey);

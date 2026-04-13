@@ -24,6 +24,7 @@ class _BLEdataState extends State<BLEdata> {
 
   @override
   Widget build(BuildContext context) {
+    final colGap = (MediaQuery.of(context).size.width * 0.015).clamp(6.0, 14.0);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
@@ -34,8 +35,8 @@ class _BLEdataState extends State<BLEdata> {
             flex: 3,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       Expanded(
@@ -44,14 +45,14 @@ class _BLEdataState extends State<BLEdata> {
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-
+                      SizedBox(width: colGap),
                       Expanded(
                         child: Text(
                           'Mouth Opening',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-
+                      SizedBox(width: colGap),
                       Expanded(
                         child: Text(
                           'Max MIO',
@@ -96,7 +97,9 @@ class _BLEdataState extends State<BLEdata> {
                             child: Row(
                               children: [
                                 Expanded(child: Text(time.toString())),
+                                SizedBox(width: colGap),
                                 Expanded(child: Text(mio.toStringAsFixed(2))),
+                                SizedBox(width: colGap),
                                 Expanded(
                                   child: Text(maxMio.toStringAsFixed(2)),
                                 ),
@@ -119,8 +122,8 @@ class _BLEdataState extends State<BLEdata> {
             flex: 4,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       Expanded(
@@ -129,24 +132,24 @@ class _BLEdataState extends State<BLEdata> {
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-
+                      SizedBox(width: colGap),
                       Expanded(
                         child: Text(
                           'B1 (N)',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-
+                      SizedBox(width: colGap),
                       Expanded(
                         child: Text(
-                          'Avg Bite',
+                          'Smart Avg (N)',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-
+                      SizedBox(width: colGap),
                       Expanded(
                         child: Text(
-                          'Max Bite (Smart Avg)',
+                          'Max Smart Avg (N)',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -183,10 +186,10 @@ class _BLEdataState extends State<BLEdata> {
                             }
                           }
 
-                          final double avg = (row['avg_bite_force'] ?? 0)
+                          final double smartAvg = (row['avg_bite_force'] ?? 0)
                               .toDouble();
 
-                          final double max = (row['max_bite_force'] ?? 0)
+                          final double maxSmartAvg = (row['max_bite_force'] ?? 0)
                               .toDouble();
 
                           return Padding(
@@ -197,9 +200,12 @@ class _BLEdataState extends State<BLEdata> {
                             child: Row(
                               children: [
                                 Expanded(child: Text(time.toString())),
+                                SizedBox(width: colGap),
                                 Expanded(child: Text(b1.toStringAsFixed(2))),
-                                Expanded(child: Text(avg.toStringAsFixed(2))),
-                                Expanded(child: Text(max.toStringAsFixed(2))),
+                                SizedBox(width: colGap),
+                                Expanded(child: Text(smartAvg.toStringAsFixed(2))),
+                                SizedBox(width: colGap),
+                                Expanded(child: Text(maxSmartAvg.toStringAsFixed(2))),
                               ],
                             ),
                           );
