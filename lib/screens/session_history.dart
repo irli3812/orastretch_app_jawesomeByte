@@ -356,36 +356,107 @@ class _SessionHistoryState extends State<SessionHistory> {
 
   void _showSessionDetails(
     BuildContext context, {
-    required dynamic sessionKey,
-    required String name,
-    required DateTime createdAt,
-    required int sessionNumber,
-    required double maxSmartAvgValue,
-    required double maxMioValue,
-    required List<double> sensorMaxes,
-    required String? startTime,
-    required String? endTime,
-    required String? startTimePrecise,
-    required String? endTimePrecise,
+    required List<MapEntry<dynamic, dynamic>> allEntries,
+    required int initialIndex,
+    required Map<dynamic, int> sessionNumsByKey,
   }) {
-    final dateStr = _formatDate(createdAt);
-    final durationText = _durationFromTimes(startTimePrecise, endTimePrecise);
-    final title = '$dateStr - Session $sessionNumber';
     final popupScale = (MediaQuery.of(context).size.width / 430)
-      .clamp(0.90, 1.15)
+        .clamp(0.90, 1.15)
         .toDouble();
-    String editableName = name;
+
+    Map<dynamic, dynamic> mapAt(int idx) {
+      final key = allEntries[idx].key;
+      final hbox = Hive.box(SaveSessionService.boxName);
+      final fresh = hbox.get(key);
+      if (fresh is Map) return fresh.cast<dynamic, dynamic>();
+      final v = allEntries[idx].value;
+      return v is Map ? v.cast<dynamic, dynamic>() : <dynamic, dynamic>{};
+    }
+
+    String nameAt(int idx) {
+      final m = mapAt(idx);
+      final n = (m['name'] as String?)?.trim();
+      return n != null && n.isNotEmpty ? n : 'Unnamed Session';
+    }
+
+    int currentIndex = initialIndex;
     bool isEditingName = false;
-    final TextEditingController nameController = TextEditingController(
-      text: name,
-    );
-    final FocusNode nameFocusNode = FocusNode();
+    String editableName = nameAt(initialIndex);
+    TextEditingController nameController =
+        TextEditingController(text: editableName);
+    FocusNode nameFocusNode = FocusNode();
 
     showDialog(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
+            final entry = allEntries[currentIndex];
+            final map = mapAt(currentIndex);
+            final sessionKey = entry.key;
+            final createdMs =
+                (map['created_at_epoch_ms'] as num?)?.toInt() ?? 0;
+            final createdAt = createdMs > 0
+                ? DateTime.fromMillisecondsSinceEpoch(createdMs)
+                : DateTime.now();
+            final sessionNumber = sessionNumsByKey[sessionKey] ?? 1;
+            final dateStr = _formatDate(createdAt);
+            final title = '$dateStr - Session $sessionNumber';
+            final durationText = _durationFromTimes(
+              map['start_time_precise'] as String?,
+              map['end_time_precise'] as String?,
+            );
+            final maxSmartAvgValue =
+                (map['max_bite_force'] as num?)?.toDouble() ?? 0.0;
+            final maxMioValue =
+                (map['max_mouth_opening'] as num?)?.toDouble() ?? 0.0;
+            final sensorMaxes = _extractSensorMaxes(map);
+            final startTime = map['start_time'] as String?;
+            final endTime = map['end_time'] as String?;
+            final hasPrev = currentIndex > 0;
+            final hasNext = currentIndex < allEntries.length - 1;
+
+            void navigate(int newIndex) {
+              nameController.dispose();
+              nameFocusNode.dispose();
+              currentIndex = newIndex;
+              isEditingName = false;
+              editableName = nameAt(newIndex);
+              nameController = TextEditingController(text: editableName);
+              nameFocusNode = FocusNode();
+              setDialogState(() {});
+            }
+
+            Widget navButton({
+              required IconData icon,
+              required bool enabled,
+              required VoidCallback? onPressed,
+            }) {
+              return SizedBox(
+                width: 34,
+                height: 34,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.white,
+                    foregroundColor:
+                        enabled ? Colors.black : Colors.grey.shade400,
+                    elevation: enabled ? 1 : 0,
+                    side: BorderSide(
+                      color: enabled
+                          ? const Color(0xFFE5E7EB)
+                          : Colors.grey.shade300,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: onPressed,
+                  child: Icon(icon, size: 20),
+                ),
+              );
+            }
+
             Future<void> commitNameEdit() async {
               final newName = nameController.text.trim();
               if (newName.isEmpty) {
@@ -420,14 +491,33 @@ class _SessionHistoryState extends State<SessionHistory> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: (22 * popupScale).clamp(18.0, 28.0),
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                children: [
+                  navButton(
+                    icon: Icons.chevron_left,
+                    enabled: hasPrev,
+                    onPressed:
+                        hasPrev ? () => navigate(currentIndex - 1) : null,
+                  ),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: (22 * popupScale).clamp(18.0, 28.0),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  navButton(
+                    icon: Icons.chevron_right,
+                    enabled: hasNext,
+                    onPressed:
+                        hasNext ? () => navigate(currentIndex + 1) : null,
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               Row(
@@ -569,16 +659,6 @@ class _SessionHistoryState extends State<SessionHistory> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Maximums Summary',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: (17 * popupScale).clamp(14.0, 22.0),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
                       if (isNarrow)
                         Column(
                           children: [
@@ -854,27 +934,8 @@ class _SessionHistoryState extends State<SessionHistory> {
                         (map['name'] as String?)?.trim().isNotEmpty == true
                         ? map['name'] as String
                         : 'Unnamed Session';
-
-                    final createdMs =
-                        (map['created_at_epoch_ms'] as num?)?.toInt() ?? 0;
-                    final createdAt = createdMs > 0
-                        ? DateTime.fromMillisecondsSinceEpoch(createdMs)
-                        : DateTime.now();
-                    final sessionNumber =
-                        sessionNumsByKey[entries[index].key] ?? 1;
-
                     final maxBite = _metricValue(map['max_bite_force'], 'N');
-                    final maxSmartAvgValue =
-                        (map['max_bite_force'] as num?)?.toDouble() ?? 0.0;
-                    final maxMioValue =
-                        (map['max_mouth_opening'] as num?)?.toDouble() ?? 0.0;
-                    final sensorMaxes = _extractSensorMaxes(map);
                     final maxMio = _metricValue(map['max_mouth_opening'], 'mm');
-                    final startTime = map['start_time'] as String?;
-                    final endTime = map['end_time'] as String?;
-                    final startTimePrecise =
-                        map['start_time_precise'] as String?;
-                    final endTimePrecise = map['end_time_precise'] as String?;
                     final displayName = name;
                     final metricText = '$maxBite/$maxMio';
 
@@ -896,17 +957,9 @@ class _SessionHistoryState extends State<SessionHistory> {
 
                           _showSessionDetails(
                             context,
-                            sessionKey: entries[index].key,
-                            name: name,
-                            createdAt: createdAt,
-                            sessionNumber: sessionNumber,
-                            maxSmartAvgValue: maxSmartAvgValue,
-                            maxMioValue: maxMioValue,
-                            sensorMaxes: sensorMaxes,
-                            startTime: startTime,
-                            endTime: endTime,
-                            startTimePrecise: startTimePrecise,
-                            endTimePrecise: endTimePrecise,
+                            allEntries: entries,
+                            initialIndex: index,
+                            sessionNumsByKey: sessionNumsByKey,
                           );
                         },
                         style: ElevatedButton.styleFrom(
