@@ -79,12 +79,15 @@ class SaveSessionService {
       }
     }
 
-    final validMaxes = sensorMaxes
-        .where((v) => v.isFinite && v != double.negativeInfinity)
-        .toList(growable: false);
-    final double? avgOfSensorMaxes = validMaxes.length == 20
-        ? validMaxes.reduce((a, b) => a + b) / 20.0
-        : null;
+    final List<dynamic> smartAvgRunningMaxSeries = List<dynamic>.from(
+      appBox.get('bite_force_running_max_series', defaultValue: <dynamic>[]),
+    );
+    final dynamic latestSmartAvgMaxRaw = smartAvgRunningMaxSeries.isNotEmpty
+      ? smartAvgRunningMaxSeries.last
+      : null;
+    final double? latestSmartAvgMax = latestSmartAvgMaxRaw is num
+      ? latestSmartAvgMaxRaw.toDouble()
+      : null;
 
     final List<dynamic> mioMaxSeries = List<dynamic>.from(
       appBox.get('mouth_opening_running_max_series', defaultValue: <dynamic>[]),
@@ -103,28 +106,88 @@ class SaveSessionService {
       'end_time': endTime,
       'start_time_precise': startTimePrecise,
       'end_time_precise': endTimePrecise,
-      'max_bite_force': avgOfSensorMaxes,
+      'max_bite_force': latestSmartAvgMax,
       'max_mouth_opening': latestMioMax,
-      'strain_gauge_01_max': null,
-      'strain_gauge_02_max': null,
-      'strain_gauge_03_max': null,
-      'strain_gauge_04_max': null,
-      'strain_gauge_05_max': null,
-      'strain_gauge_06_max': null,
-      'strain_gauge_07_max': null,
-      'strain_gauge_08_max': null,
-      'strain_gauge_09_max': null,
-      'strain_gauge_10_max': null,
-      'strain_gauge_11_max': null,
-      'strain_gauge_12_max': null,
-      'strain_gauge_13_max': null,
-      'strain_gauge_14_max': null,
-      'strain_gauge_15_max': null,
-      'strain_gauge_16_max': null,
-      'strain_gauge_17_max': null,
-      'strain_gauge_18_max': null,
-      'strain_gauge_19_max': null,
-      'strain_gauge_20_max': null,
+      'strain_gauge_01_max': sensorMaxes[0].isFinite &&
+          sensorMaxes[0] != double.negativeInfinity
+        ? sensorMaxes[0]
+        : null,
+      'strain_gauge_02_max': sensorMaxes[1].isFinite &&
+          sensorMaxes[1] != double.negativeInfinity
+        ? sensorMaxes[1]
+        : null,
+      'strain_gauge_03_max': sensorMaxes[2].isFinite &&
+          sensorMaxes[2] != double.negativeInfinity
+        ? sensorMaxes[2]
+        : null,
+      'strain_gauge_04_max': sensorMaxes[3].isFinite &&
+          sensorMaxes[3] != double.negativeInfinity
+        ? sensorMaxes[3]
+        : null,
+      'strain_gauge_05_max': sensorMaxes[4].isFinite &&
+          sensorMaxes[4] != double.negativeInfinity
+        ? sensorMaxes[4]
+        : null,
+      'strain_gauge_06_max': sensorMaxes[5].isFinite &&
+          sensorMaxes[5] != double.negativeInfinity
+        ? sensorMaxes[5]
+        : null,
+      'strain_gauge_07_max': sensorMaxes[6].isFinite &&
+          sensorMaxes[6] != double.negativeInfinity
+        ? sensorMaxes[6]
+        : null,
+      'strain_gauge_08_max': sensorMaxes[7].isFinite &&
+          sensorMaxes[7] != double.negativeInfinity
+        ? sensorMaxes[7]
+        : null,
+      'strain_gauge_09_max': sensorMaxes[8].isFinite &&
+          sensorMaxes[8] != double.negativeInfinity
+        ? sensorMaxes[8]
+        : null,
+      'strain_gauge_10_max': sensorMaxes[9].isFinite &&
+          sensorMaxes[9] != double.negativeInfinity
+        ? sensorMaxes[9]
+        : null,
+      'strain_gauge_11_max': sensorMaxes[10].isFinite &&
+          sensorMaxes[10] != double.negativeInfinity
+        ? sensorMaxes[10]
+        : null,
+      'strain_gauge_12_max': sensorMaxes[11].isFinite &&
+          sensorMaxes[11] != double.negativeInfinity
+        ? sensorMaxes[11]
+        : null,
+      'strain_gauge_13_max': sensorMaxes[12].isFinite &&
+          sensorMaxes[12] != double.negativeInfinity
+        ? sensorMaxes[12]
+        : null,
+      'strain_gauge_14_max': sensorMaxes[13].isFinite &&
+          sensorMaxes[13] != double.negativeInfinity
+        ? sensorMaxes[13]
+        : null,
+      'strain_gauge_15_max': sensorMaxes[14].isFinite &&
+          sensorMaxes[14] != double.negativeInfinity
+        ? sensorMaxes[14]
+        : null,
+      'strain_gauge_16_max': sensorMaxes[15].isFinite &&
+          sensorMaxes[15] != double.negativeInfinity
+        ? sensorMaxes[15]
+        : null,
+      'strain_gauge_17_max': sensorMaxes[16].isFinite &&
+          sensorMaxes[16] != double.negativeInfinity
+        ? sensorMaxes[16]
+        : null,
+      'strain_gauge_18_max': sensorMaxes[17].isFinite &&
+          sensorMaxes[17] != double.negativeInfinity
+        ? sensorMaxes[17]
+        : null,
+      'strain_gauge_19_max': sensorMaxes[18].isFinite &&
+          sensorMaxes[18] != double.negativeInfinity
+        ? sensorMaxes[18]
+        : null,
+      'strain_gauge_20_max': sensorMaxes[19].isFinite &&
+          sensorMaxes[19] != double.negativeInfinity
+        ? sensorMaxes[19]
+        : null,
     };
 
     await box.add(row);
