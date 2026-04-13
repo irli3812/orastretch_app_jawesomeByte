@@ -33,7 +33,7 @@ BLECharacteristic* pCmdCharacteristic = nullptr;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-
+volatile bool calibrationRequested = false;
 
 // --- 3.b. Data Tracking Variables ---
 const int NUM_BITES = 20;
@@ -76,17 +76,12 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
     String value = pCharacteristic->getValue();
     value.trim();
 
-    if (value == "RESET") {
+    if (value == "C") {
 
-      Serial.println("Reset cmd received");
+      Serial.println("Command received: ");
+      Serial.println(value);
 
-      angleSum = 0.0;
-      angleMax = 0.0;
-      angleCount = 0;
-
-      biteSum = 0.0;
-      biteMax = 0.0;
-      biteCount = 0;
+      calibrationRequested = true;
     }
   }
 };
@@ -122,6 +117,13 @@ float computeTopQuartileAvg(float* data, int size) {
   return sum / quartileSize;
 }
 
+void callback(uint8_t* pData, size_t length) {
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)pData[i]);  // Prints to Serial Monitor
+  }
+  Serial.println();
+}
+
 // --- 6. INITIALIZATION ---
 void setup() {
 
@@ -138,7 +140,7 @@ void setup() {
   // --- BLE Setup ---
 
   // 1. Initialize BLE Device and set Local Name
-  BLEDevice::init("OraStretch_RESET_TEST");
+  BLEDevice::init("OraStretch");
 
   // 2. Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -232,13 +234,30 @@ void loop() {
     // Re-assert the ON state (LOW)
     digitalWrite(yellowLED, LOW);
 
+    // Handle calibration command
+    if (calibrationRequested) {
+
+      calibrationRequested = false;
+
+      Serial.println("Calibration executed");
+
+      angleSum = 0.0;
+      angleMax = 0.0;
+      angleCount = 0;
+
+      biteSum = 0.0;
+      biteMax = 0.0;
+      biteCount = 0;
+    }
+
     // 1. Generate random angle (-180 to 180)
     uint32_t randomInt = esp_random();
     const float UINT32_MAX_F = 4294967295.0;
 
     float normalized = (float)randomInt / UINT32_MAX_F;
     float randomAngle = (normalized * 360.0) - 180.0;
-    float distance = fabs(1.0354 * randomAngle + 6.9685);
+    float distance = ((randomAngle + 180.0) / 360.0) * 50.0;  // linear mapping to distance
+    distance = constrain(distance, 0.0, 50.0);
 
     angleSum += randomAngle;
 

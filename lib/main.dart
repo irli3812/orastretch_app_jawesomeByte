@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' show BluetoothService;
 import 'pages.dart';
 import 'widgets/bluetooth_button.dart';
+import 'widgets/calibrate.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'services/session_data_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -128,7 +129,7 @@ const int mioMajorDivs = 2;
 
 /// Global Meter Gauge Limits RECORD BITE FORCE (BF)
 const double bfMin = 0.0;
-const double bfMax = 150.0;
+const double bfMax = 40.0;
 const int bfMinorDivs = 15;
 const int bfMajorDivs = 5;
 
@@ -207,6 +208,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isBluetoothConnected = false;
+  BluetoothCharacteristic? _calibrationCharacteristic;
 
   /// Discover services with retry logic (iOS-friendly).
   /// On iOS, service discovery can fail due to concurrent MTU negotiation.
@@ -259,35 +261,72 @@ class _MyAppState extends State<MyApp> {
           title: Row(
             children: [
               Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'OraStretch Tech',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 18,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'OraStretch Tech',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
                       ),
-                    ),
-                    getPlatformWidget(),
-                  ],
+                      getPlatformWidget(),
+                    ],
+                  ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const BatteryStatus(),
-                  const SizedBox(width: 8),
-                  BluetoothButton(
-                    isConnected: isBluetoothConnected,
-                    onConnectionChange: (isConnected) {
-                      setState(() {
-                        isBluetoothConnected = isConnected;
-                      });
-                    },
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    height: 34,
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          (isBluetoothConnected && _calibrationCharacteristic != null)
+                          ? () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => CalibrationScreen(
+                                    isBluetoothConnected: isBluetoothConnected,
+                                    characteristic: _calibrationCharacteristic,
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
+                      icon: const Icon(Icons.tune, size: 16),
+                      label: const Text('Calibrate'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF1F2937),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const BatteryStatus(),
+                      const SizedBox(width: 8),
+                      BluetoothButton(
+                        isConnected: isBluetoothConnected,
+                        onConnectionChange: (isConnected) {
+                          setState(() {
+                            isBluetoothConnected = isConnected;
+                            if (!isConnected) {
+                              _calibrationCharacteristic = null;
+                            }
+                          });
+                        },
                     onDeviceSelected: (device) async {
                       if (device == null) return;
                       try {
@@ -299,15 +338,27 @@ class _MyAppState extends State<MyApp> {
                         );
 
                         BluetoothCharacteristic? chosen;
+                        BluetoothCharacteristic? writable;
+                        BluetoothCharacteristic? writableFallback;
+                        const cmdUuidSuffix = 'ff01';
                         for (final s in services) {
                           for (final c in s.characteristics) {
-                            if (c.properties.notify) {
+                            if (chosen == null && c.properties.notify) {
                               chosen = c;
-                              break;
+                            }
+                            final isWritable = c.properties.write ||
+                                c.properties.writeWithoutResponse;
+                            if (isWritable) {
+                              if (c.uuid.str.contains(cmdUuidSuffix)) {
+                                writable = c; // prefer ff01
+                              } else {
+                                writableFallback ??= c;
+                              }
                             }
                           }
-                          if (chosen != null) break;
+                          if (chosen != null && writable != null) break;
                         }
+                        writable ??= writableFallback;
                         if (chosen == null) {
                           for (final s in services) {
                             if (s.characteristics.isNotEmpty) {
@@ -320,6 +371,11 @@ class _MyAppState extends State<MyApp> {
                           SessionDataService().attachBleCharacteristics(
                             chosen,
                           );
+                          if (mounted) {
+                            setState(() {
+                              _calibrationCharacteristic = writable;
+                            });
+                          }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -341,8 +397,10 @@ class _MyAppState extends State<MyApp> {
                         );
                       }
                     },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
