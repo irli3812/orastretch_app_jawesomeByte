@@ -131,7 +131,7 @@ const double bfMax = 150.0;
 const int bfMinorDivs = 15;
 const int bfMajorDivs = 5;
 
-Widget getPlatformWidget() {
+/*Widget getPlatformWidget() {
   String platformText;
   if (Platform.isAndroid) {
     platformText = "Android detected";
@@ -150,7 +150,7 @@ Widget getPlatformWidget() {
     overflow: TextOverflow.ellipsis,
     maxLines: 1,
   );
-}
+}*/
 
 class BatteryStatus extends StatelessWidget {
   const BatteryStatus({super.key});
@@ -160,8 +160,9 @@ class BatteryStatus extends StatelessWidget {
     final box = Hive.box('appBox');
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final buttonSize = isMobile ? 44.0 : 48.0;
-    final iconSize = isMobile ? 22.0 : 24.0;
+    final buttonSize = isMobile ? 36.0 : 40.0;
+    final iconSize = isMobile ? 20.0 : 22.0;
+    final fontSize = isMobile ? 11.0 : 12.0;
 
     return ValueListenableBuilder(
       valueListenable: box.listenable(keys: ['batteryPercent']),
@@ -169,15 +170,28 @@ class BatteryStatus extends StatelessWidget {
         final double battery =
             (box.get('batteryPercent', defaultValue: 100.0) as num).toDouble();
 
-        return SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: CustomPaint(
-            painter: _BatteryPainter(
-              batteryPercent: battery,
-              iconSize: iconSize,
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "${battery.toStringAsFixed(0)}%",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
+            SizedBox(
+              width: buttonSize,
+              height: buttonSize,
+              child: CustomPaint(
+                painter: _BatteryPainter(
+                  batteryPercent: battery,
+                  iconSize: iconSize,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -188,15 +202,12 @@ class _BatteryPainter extends CustomPainter {
   final double batteryPercent;
   final double iconSize;
 
-  _BatteryPainter({
-    required this.batteryPercent,
-    required this.iconSize,
-  });
+  _BatteryPainter({required this.batteryPercent, required this.iconSize});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    
+
     // Battery body (outline)
     final bodyWidth = iconSize * 0.75;
     final bodyHeight = iconSize * 0.4;
@@ -205,18 +216,18 @@ class _BatteryPainter extends CustomPainter {
       width: bodyWidth,
       height: bodyHeight,
     );
-    
+
     // Draw outline
     final outlinePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(bodyRect, Radius.circular(2)),
       outlinePaint,
     );
-    
+
     // Draw battery terminal (nub)
     final terminalWidth = bodyWidth * 0.2;
     final terminalHeight = bodyHeight * 0.4;
@@ -225,9 +236,9 @@ class _BatteryPainter extends CustomPainter {
       width: terminalWidth,
       height: terminalHeight,
     );
-    
+
     canvas.drawRect(terminalRect, outlinePaint);
-    
+
     // Draw fill based on battery percentage (white)
     final fillWidth = bodyWidth * (batteryPercent / 100);
     final fillRect = Rect.fromLTWH(
@@ -236,11 +247,11 @@ class _BatteryPainter extends CustomPainter {
       fillWidth,
       bodyRect.height,
     );
-    
+
     final fillPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(fillRect, Radius.circular(1.5)),
       fillPaint,
@@ -335,7 +346,8 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
         appBar: AppBar(
           title: Row(
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Column(
@@ -344,13 +356,16 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                     children: [
                       const Text(
                         'OraStretch Tech',
+                        maxLines: 2,
+                        softWrap: true,
+                        overflow: TextOverflow.visible,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontSize: 18,
                         ),
                       ),
-                      getPlatformWidget(),
+                      //getPlatformWidget(),
                     ],
                   ),
                 ),

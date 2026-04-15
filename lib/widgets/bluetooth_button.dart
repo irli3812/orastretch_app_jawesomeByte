@@ -11,7 +11,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 const String SERVICE_UUID = "4fafc201-1fb5-459e-8acb-c74c965c4013";
 const String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-class BluetoothButton extends StatelessWidget {
+class BluetoothButton extends StatefulWidget {
   final bool isConnected;
   final ValueChanged<bool> onConnectionChange;
   final ValueChanged<BluetoothDevice?>? onDeviceSelected;
@@ -23,8 +23,52 @@ class BluetoothButton extends StatelessWidget {
     this.onDeviceSelected,
   });
 
+  @override
+  State<BluetoothButton> createState() => _BluetoothButtonState();
+}
+
+class _BluetoothButtonState extends State<BluetoothButton>
+    with TickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.18).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant BluetoothButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Start pulsing when NOT connected
+    if (!widget.isConnected && !_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
+
+    // Stop pulsing when connected
+    if (widget.isConnected && _pulseController.isAnimating) {
+      _pulseController.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleConnect(BuildContext context) async {
-    if (isConnected) {
+    if (widget.isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Already connected to device')),
       );
@@ -40,9 +84,9 @@ class BluetoothButton extends StatelessWidget {
       builder: (dialogContext) {
         return DeviceSelectionDialog(
           onDeviceConnected: (connected, device) {
-            onConnectionChange(connected);
-            if (onDeviceSelected != null) {
-              onDeviceSelected!(device);
+            widget.onConnectionChange(connected);
+            if (widget.onDeviceSelected != null) {
+              widget.onDeviceSelected!(device);
             }
           },
         );
@@ -52,23 +96,33 @@ class BluetoothButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive logic for button sizing
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return ElevatedButton(
-      onPressed: () => _handleConnect(context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0072B2),
-        shape: const CircleBorder(),
-        padding: EdgeInsets.zero,
-        elevation: 2,
-        minimumSize: isMobile ? const Size(44, 44) : const Size(48, 48),
-      ),
-      child: Icon(
-        isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-        size: isMobile ? 22 : 24,
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: widget.isConnected ? 1.0 : _pulseAnimation.value,
+          child: child,
+        );
+      },
+      child: ElevatedButton(
+        onPressed: () => _handleConnect(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0072B2),
+          shape: const CircleBorder(),
+          padding: EdgeInsets.zero,
+          elevation: 2,
+          minimumSize: isMobile ? const Size(44, 44) : const Size(48, 48),
+        ),
+        child: Icon(
+          widget.isConnected
+              ? Icons.bluetooth_connected
+              : Icons.bluetooth_disabled,
+          size: isMobile ? 22 : 24,
+        ),
       ),
     );
   }

@@ -96,8 +96,8 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                 Expanded(
                   child: Text(
                     _viewMode == ViewMode.meter
-                        ? 'Current distance (mm)'
-                        : 'Distance over Time',
+                        ? 'Meter'
+                        : 'Graph',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.left,

@@ -100,10 +100,10 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                 Expanded(
                   child: Text(
                     _viewMode == ViewMode.meter
-                        ? 'Current Avg of Top 5 Teeth (N)'
+                        ? 'Meter'
                         : _viewMode == ViewMode.spatial
-                        ? 'Colored Teeth Force Map'
-                        : 'Avg Bite Force per Region',
+                        ? 'Map'
+                        : 'Graph',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.left,
