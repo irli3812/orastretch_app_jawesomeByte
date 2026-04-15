@@ -204,8 +204,11 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
   bool isBluetoothConnected = false;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  bool _hasSentCalibration = false;
 
   /// Discover services with retry logic (iOS-friendly).
   /// On iOS, service discovery can fail due to concurrent MTU negotiation.
@@ -229,6 +232,26 @@ class _MyAppState extends State<MyApp> {
       }
     }
     throw Exception('Failed to discover services after $maxRetries attempts');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
   }
 
   @override
@@ -279,22 +302,36 @@ class _MyAppState extends State<MyApp> {
               ),
               Expanded(
                 child: Center(
-                  child: SizedBox(
-                    height: 34,
-                    child: ElevatedButton(
-                      onPressed:
-                          (isBluetoothConnected &&
-                              Calibration.writeCharacteristic != null)
-                          ? () async {
-                              await Calibration.calibrate();
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF1F2937),
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: (!_hasSentCalibration && isBluetoothConnected)
+                            ? _pulseAnimation.value
+                            : 1.0,
+                        child: child,
+                      );
+                    },
+                    child: SizedBox.square(
+                      dimension: 40,
+                      child: ElevatedButton(
+                        onPressed:
+                            (isBluetoothConnected &&
+                                Calibration.writeCharacteristic != null)
+                            ? () async {
+                                await Calibration.calibrate();
+                                _pulseController.stop();
+                                _hasSentCalibration = true;
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: EdgeInsets.zero,
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1F2937),
+                        ),
+                        child: const Icon(Icons.tune, size: 18),
                       ),
-                      child: const Icon(Icons.tune, size: 16),
                     ),
                   ),
                 ),
@@ -312,8 +349,14 @@ class _MyAppState extends State<MyApp> {
                         onConnectionChange: (isConnected) {
                           setState(() {
                             isBluetoothConnected = isConnected;
+
                             if (!isConnected) {
                               Calibration.writeCharacteristic = null;
+                              _pulseController.stop();
+                              _hasSentCalibration = false;
+                            } else {
+                              _hasSentCalibration = false;
+                              _pulseController.repeat(reverse: true);
                             }
                           });
                         },

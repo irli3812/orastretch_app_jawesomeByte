@@ -19,12 +19,37 @@ class Footer extends StatefulWidget {
   State<Footer> createState() => _FooterState();
 }
 
-class _FooterState extends State<Footer> {
+class _FooterState extends State<Footer> with TickerProviderStateMixin {
   final SessionDataService _session = SessionDataService();
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  bool _hasStartedSession = false;
 
   Future<void> _startSession() async {
     await _session.start();
+    _pulseController.stop();
+    _hasStartedSession = true;
     widget.onStartSession();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
   }
 
   void _confirmEndSession() {
@@ -69,6 +94,16 @@ class _FooterState extends State<Footer> {
         final elapsed = _session.elapsedMs;
         final isRunning = _session.isRunning;
 
+        final isCalibrated = Hive.box(
+          'appBox',
+        ).get('isCalibrated', defaultValue: false);
+
+        if (isCalibrated &&
+            !_hasStartedSession &&
+            !_pulseController.isAnimating) {
+          _pulseController.repeat(reverse: true);
+        }
+
         return Container(
           width: double.infinity,
           padding: EdgeInsets.all(padding),
@@ -92,31 +127,43 @@ class _FooterState extends State<Footer> {
                   ),
                 ),
                 SizedBox(height: vertGap),
-                SizedBox(
-                  width: buttonWidth,
-                  child: ElevatedButton.icon(
-                    onPressed: widget.isActive
-                        ? (isRunning ? _confirmEndSession : _startSession)
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(0, scale(56)),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: scale(14),
-                        vertical: scale(8),
+
+                AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: (_session.isRunning || _hasStartedSession)
+                          ? 1.0
+                          : _pulseAnimation.value,
+                      child: child,
+                    );
+                  },
+                  child: SizedBox(
+                    width: buttonWidth,
+                    child: ElevatedButton.icon(
+                      onPressed: widget.isActive
+                          ? (isRunning ? _confirmEndSession : _startSession)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(0, scale(56)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: scale(14),
+                          vertical: scale(8),
+                        ),
                       ),
-                    ),
-                    icon: Icon(
-                      isRunning ? Icons.stop : Icons.play_arrow,
-                      size: scale(22),
-                    ),
-                    label: Text(
-                      isRunning ? 'End Session' : 'Start Session',
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.visible,
-                      style: TextStyle(
-                        fontSize: buttonFontSize,
-                        fontWeight: FontWeight.w700,
+                      icon: Icon(
+                        isRunning ? Icons.stop : Icons.play_arrow,
+                        size: scale(22),
+                      ),
+                      label: Text(
+                        isRunning ? 'End Session' : 'Start Session',
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
+                        style: TextStyle(
+                          fontSize: buttonFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),

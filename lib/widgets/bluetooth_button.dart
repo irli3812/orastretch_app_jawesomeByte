@@ -275,27 +275,56 @@ class _DeviceSelectionDialogState extends State<DeviceSelectionDialog> {
                       child: ElevatedButton(
                         style: popupButtonStyle,
                         onPressed: () => _connectToDevice(result.device),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                result.device.platformName.isEmpty
-                                    ? "Unknown"
-                                    : result.device.platformName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isNarrow = constraints.maxWidth < 260;
+
+                            if (isNarrow) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    result.device.platformName.isEmpty
+                                        ? "Unknown"
+                                        : result.device.platformName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    result.device.remoteId.str,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    result.device.platformName.isEmpty
+                                        ? "Unknown"
+                                        : result.device.platformName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              result.device.remoteId.str,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
+                                const SizedBox(width: 12),
+                                Text(
+                                  result.device.remoteId.str,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),

@@ -30,7 +30,7 @@ class _MyPageState extends State<MyPage> {
     _pageController = PageController(initialPage: currentIndex);
 
     pages = [
-      PageItem(id: 'ble', title: 'Raw', builder: () => const BLEdata()),
+      //PageItem(id: 'ble', title: 'Raw', builder: () => const BLEdata()),
       PageItem(
         id: 'mouth',
         title: 'Mouth Opening',
@@ -49,11 +49,11 @@ class _MyPageState extends State<MyPage> {
         title: 'History',
         builder: () => const SessionHistory(),
       ),
-      PageItem(
+      /*PageItem(
         id: 'stats',
         title: 'Trends',
         builder: () => const HistoricalStatistics(),
-      ),
+      ),*/
     ];
   }
 

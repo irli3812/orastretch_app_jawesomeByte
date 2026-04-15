@@ -91,11 +91,7 @@ class _SessionHistoryState extends State<SessionHistory> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFFCC79A7),
-                Color(0xFFE69F00),
-                Color(0xFF009E73),
-              ],
+              colors: [Color(0xFFCC79A7), Color(0xFFE69F00), Color(0xFF009E73)],
             ),
           ),
         ),
@@ -131,15 +127,12 @@ class _SessionHistoryState extends State<SessionHistory> {
       builder: (context, constraints) {
         const int count = 10;
         final gap = (constraints.maxWidth * 0.006).clamp(1.0, 4.0);
-        final toothWidth =
-            (constraints.maxWidth - (gap * (count - 1))) / count;
+        final toothWidth = (constraints.maxWidth - (gap * (count - 1))) / count;
         final toothHeight = toothWidth * 1.65;
         final curvePeak = toothHeight * 0.16;
         final rowHeight = toothHeight + curvePeak;
-        final labelFont =
-          (toothWidth * 0.30 * textScale).clamp(9.0, 14.0);
-        final valueFont =
-          (toothWidth * 0.45 * textScale).clamp(12.0, 20.0);
+        final labelFont = (toothWidth * 0.30 * textScale).clamp(9.0, 14.0);
+        final valueFont = (toothWidth * 0.45 * textScale).clamp(12.0, 20.0);
 
         return SizedBox(
           height: rowHeight,
@@ -246,9 +239,9 @@ class _SessionHistoryState extends State<SessionHistory> {
                       ),
                       onPressed: () {
                         final button = context.findRenderObject() as RenderBox?;
-                        final overlay = Overlay.of(context)
-                            .context
-                            .findRenderObject() as RenderBox?;
+                        final overlay =
+                            Overlay.of(context).context.findRenderObject()
+                                as RenderBox?;
                         if (button == null || overlay == null) return;
 
                         final buttonTopLeft = button.localToGlobal(
@@ -277,11 +270,16 @@ class _SessionHistoryState extends State<SessionHistory> {
                               enabled: false,
                               padding: const EdgeInsets.all(10),
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 260),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 260,
+                                ),
                                 child: Text(
                                   infoMessage,
                                   style: TextStyle(
-                                    fontSize: (14 * textScale).clamp(12.0, 20.0),
+                                    fontSize: (14 * textScale).clamp(
+                                      12.0,
+                                      20.0,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -382,8 +380,9 @@ class _SessionHistoryState extends State<SessionHistory> {
     int currentIndex = initialIndex;
     bool isEditingName = false;
     String editableName = nameAt(initialIndex);
-    TextEditingController nameController =
-        TextEditingController(text: editableName);
+    TextEditingController nameController = TextEditingController(
+      text: editableName,
+    );
     FocusNode nameFocusNode = FocusNode();
 
     showDialog(
@@ -439,8 +438,9 @@ class _SessionHistoryState extends State<SessionHistory> {
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.zero,
                     backgroundColor: Colors.white,
-                    foregroundColor:
-                        enabled ? Colors.black : Colors.grey.shade400,
+                    foregroundColor: enabled
+                        ? Colors.black
+                        : Colors.grey.shade400,
                     elevation: enabled ? 1 : 0,
                     side: BorderSide(
                       color: enabled
@@ -487,211 +487,190 @@ class _SessionHistoryState extends State<SessionHistory> {
             }
 
             return AlertDialog(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  navButton(
-                    icon: Icons.chevron_left,
-                    enabled: hasPrev,
-                    onPressed:
-                        hasPrev ? () => navigate(currentIndex - 1) : null,
-                  ),
-                  Expanded(
-                    child: Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: (22 * popupScale).clamp(18.0, 28.0),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  navButton(
-                    icon: Icons.chevron_right,
-                    enabled: hasNext,
-                    onPressed:
-                        hasNext ? () => navigate(currentIndex + 1) : null,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        elevation: 1,
-                        side: const BorderSide(color: Color(0xFFE5E7EB)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () async {
-                        if (isEditingName) {
-                          await commitNameEdit();
-                        } else {
-                          setDialogState(() {
-                            isEditingName = true;
-                          });
-                          Future.microtask(() {
-                            if (nameFocusNode.canRequestFocus) {
-                              nameFocusNode.requestFocus();
-                              nameController.selection = TextSelection(
-                                baseOffset: 0,
-                                extentOffset: nameController.text.length,
-                              );
-                            }
-                          });
-                        }
-                      },
-                      child: Icon(
-                        isEditingName ? Icons.check : Icons.edit,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isEditingName ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: isEditingName
-                            ? Border.all(color: const Color(0xFFE5E7EB))
+                  Row(
+                    children: [
+                      navButton(
+                        icon: Icons.chevron_left,
+                        enabled: hasPrev,
+                        onPressed: hasPrev
+                            ? () => navigate(currentIndex - 1)
                             : null,
                       ),
-                      child: isEditingName
-                          ? TextField(
-                              controller: nameController,
-                              focusNode: nameFocusNode,
-                              autofocus: true,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) async {
-                                await commitNameEdit();
-                              },
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            )
-                          : Text(
-                              editableName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: (18 * popupScale).clamp(16.0, 26.0),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Start: ${startTime ?? '--'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: (17 * popupScale).clamp(14.0, 22.0),
-                        fontWeight: FontWeight.w400,
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: (22 * popupScale).clamp(18.0, 28.0),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'End: ${endTime ?? '--'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: (17 * popupScale).clamp(14.0, 22.0),
-                        fontWeight: FontWeight.w400,
+                      navButton(
+                        icon: Icons.chevron_right,
+                        enabled: hasNext,
+                        onPressed: hasNext
+                            ? () => navigate(currentIndex + 1)
+                            : null,
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Duration: $durationText',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: (17 * popupScale).clamp(14.0, 22.0),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Divider(height: 1, thickness: 1),
-            ],
-          ),
-          content: SizedBox(
-            width: MediaQuery.of(dialogContext).size.width * 0.90,
-            child: SingleChildScrollView(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isNarrow = constraints.maxWidth < 560;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      if (isNarrow)
-                        Column(
-                          children: [
-                            _buildStaticMeterCard(
-                              title: 'Max Bite Force (N)',
-                              value: maxSmartAvgValue,
-                              min: bfMin,
-                              max: bfMax,
-                              decimals: 1,
-                              textScale: popupScale,
-                              infoMessage:
-                                  'Max of overall top 5 teeth averages for the session, or max of the upper quartile averages',
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            elevation: 1,
+                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(height: 10),
-                            const Divider(height: 1, thickness: 1),
-                            const SizedBox(height: 10),
-                            _buildStaticMeterCard(
-                              title: 'Max Mouth Opening (mm)',
-                              value: maxMioValue,
-                              min: mioMin,
-                              max: mioMax,
-                              decimals: 1,
-                              textScale: popupScale,
-                            ),
-                          ],
-                        )
-                      else
-                        IntrinsicHeight(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildStaticMeterCard(
-                                  title: 'Max Overall Bite Force (N)',
+                          ),
+                          onPressed: () async {
+                            if (isEditingName) {
+                              await commitNameEdit();
+                            } else {
+                              setDialogState(() {
+                                isEditingName = true;
+                              });
+                              Future.microtask(() {
+                                if (nameFocusNode.canRequestFocus) {
+                                  nameFocusNode.requestFocus();
+                                  nameController.selection = TextSelection(
+                                    baseOffset: 0,
+                                    extentOffset: nameController.text.length,
+                                  );
+                                }
+                              });
+                            }
+                          },
+                          child: Icon(
+                            isEditingName ? Icons.check : Icons.edit,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isEditingName
+                                ? Colors.white
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: isEditingName
+                                ? Border.all(color: const Color(0xFFE5E7EB))
+                                : null,
+                          ),
+                          child: isEditingName
+                              ? TextField(
+                                  controller: nameController,
+                                  focusNode: nameFocusNode,
+                                  autofocus: true,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) async {
+                                    await commitNameEdit();
+                                  },
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              : Text(
+                                  editableName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: (18 * popupScale).clamp(
+                                      16.0,
+                                      26.0,
+                                    ),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Start: ${startTime ?? '--'}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: (17 * popupScale).clamp(14.0, 22.0),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'End: ${endTime ?? '--'}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: (17 * popupScale).clamp(14.0, 22.0),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Duration: $durationText',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: (17 * popupScale).clamp(14.0, 22.0),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(height: 1, thickness: 1),
+                ],
+              ),
+              content: SizedBox(
+                width: MediaQuery.of(dialogContext).size.width * 0.90,
+                child: SingleChildScrollView(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isNarrow = constraints.maxWidth < 560;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (isNarrow)
+                            Column(
+                              children: [
+                                _buildStaticMeterCard(
+                                  title: 'Max Bite Force (N)',
                                   value: maxSmartAvgValue,
                                   min: bfMin,
                                   max: bfMax,
@@ -700,12 +679,10 @@ class _SessionHistoryState extends State<SessionHistory> {
                                   infoMessage:
                                       'Max of overall top 5 teeth averages for the session, or max of the upper quartile averages',
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              const VerticalDivider(width: 1, thickness: 1),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _buildStaticMeterCard(
+                                const SizedBox(height: 10),
+                                const Divider(height: 1, thickness: 1),
+                                const SizedBox(height: 10),
+                                _buildStaticMeterCard(
                                   title: 'Max Mouth Opening (mm)',
                                   value: maxMioValue,
                                   min: mioMin,
@@ -713,98 +690,146 @@ class _SessionHistoryState extends State<SessionHistory> {
                                   decimals: 1,
                                   textScale: popupScale,
                                 ),
+                              ],
+                            )
+                          else
+                            IntrinsicHeight(
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildStaticMeterCard(
+                                      title: 'Max Overall Bite Force (N)',
+                                      value: maxSmartAvgValue,
+                                      min: bfMin,
+                                      max: bfMax,
+                                      decimals: 1,
+                                      textScale: popupScale,
+                                      infoMessage:
+                                          'Max of overall top 5 teeth averages for the session, or max of the upper quartile averages',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const VerticalDivider(width: 1, thickness: 1),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _buildStaticMeterCard(
+                                      title: 'Max Mouth Opening (mm)',
+                                      value: maxMioValue,
+                                      min: mioMin,
+                                      max: mioMax,
+                                      decimals: 1,
+                                      textScale: popupScale,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
+                          const SizedBox(height: 12),
+                          const Divider(height: 1, thickness: 1),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Max Per Bite Force Sensor (N)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: (17 * popupScale).clamp(14.0, 22.0),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      const SizedBox(height: 12),
-                      const Divider(height: 1, thickness: 1),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Max Per Bite Force Sensor (N)',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: (17 * popupScale).clamp(14.0, 22.0),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _sensorRow(
-                        sensorMaxes.sublist(0, 10),
-                        List<int>.generate(10, (i) => i + 4),
-                        isTop: true,
-                        textScale: popupScale,
-                      ),
-                      const SizedBox(height: 8),
-                      _sensorLegend(textScale: popupScale),
-                      const SizedBox(height: 8),
-                      _sensorRow(
-                        sensorMaxes.sublist(10, 20),
-                        List<int>.generate(10, (i) => 29 - i),
-                        isTop: false,
-                        textScale: popupScale,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-          actions: [
-            ElevatedButton.icon(
-              onPressed: () async {
-                final box = Hive.box(SaveSessionService.boxName);
-                await box.delete(sessionKey);
-
-                if (!mounted) return;
-                setState(() {
-                  _selectedKeys.remove(sessionKey);
-                });
-
-                if (dialogContext.mounted) {
-                  Navigator.of(dialogContext).pop();
-                }
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Session deleted')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.center,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 520,
+                                ),
+                                child: Column(
+                                  children: [
+                                    _sensorRow(
+                                      sensorMaxes.sublist(0, 10),
+                                      List<int>.generate(10, (i) => i + 4),
+                                      isTop: true,
+                                      textScale: popupScale,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _sensorLegend(textScale: popupScale),
+                                    const SizedBox(height: 8),
+                                    _sensorRow(
+                                      sensorMaxes.sublist(10, 20),
+                                      List<int>.generate(10, (i) => 29 - i),
+                                      isTop: false,
+                                      textScale: popupScale,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-              icon: const Icon(Icons.delete_outline, size: 22),
-              label: Text(
-                'Delete',
-                style: TextStyle(
-                  fontSize: (16 * popupScale).clamp(14.0, 20.0),
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+              actions: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final box = Hive.box(SaveSessionService.boxName);
+                    await box.delete(sessionKey);
+
+                    if (!mounted) return;
+                    setState(() {
+                      _selectedKeys.remove(sessionKey);
+                    });
+
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Session deleted')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  icon: const Icon(Icons.delete_outline, size: 22),
+                  label: Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontSize: (16 * popupScale).clamp(14.0, 20.0),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  icon: const Icon(Icons.close, size: 22),
+                  label: Text(
+                    'Close',
+                    style: TextStyle(
+                      fontSize: (16 * popupScale).clamp(14.0, 20.0),
+                    ),
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.close, size: 22),
-              label: Text(
-                'Close',
-                style: TextStyle(fontSize: (16 * popupScale).clamp(14.0, 20.0)),
-              ),
-            ),
-          ],
-        );
+              ],
+            );
           },
         );
       },
@@ -1052,11 +1077,7 @@ class _StaticSessionGaugePainter extends CustomPainter {
     arcPaint.shader = const SweepGradient(
       startAngle: pi,
       endAngle: 2 * pi,
-      colors: [
-        Color(0xFFCC79A7),
-        Color(0xFFE69F00),
-        Color(0xFF009E73),
-      ],
+      colors: [Color(0xFFCC79A7), Color(0xFFE69F00), Color(0xFF009E73)],
       stops: [0.0, 0.5, 1.0],
     ).createShader(arcRect);
     canvas.drawArc(arcRect, pi, pi, false, arcPaint);
