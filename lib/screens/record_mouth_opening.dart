@@ -235,7 +235,7 @@ class _RecordMouthOpeningState extends State<RecordMouthOpening> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Overall Max',
+                            'Overall Max So Far',
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,

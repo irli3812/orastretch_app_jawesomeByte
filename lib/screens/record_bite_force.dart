@@ -260,7 +260,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Average',
+                            'Current Avg of Top 5 Teeth',
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,
@@ -275,7 +275,7 @@ class _RecordBiteForceState extends State<RecordBiteForce> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Overall Max',
+                            'Overall Max So Far',
                             maxLines: 1,
                             softWrap: false,
                             textAlign: TextAlign.center,
