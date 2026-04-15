@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/record_bite_force.dart';
 import 'screens/session_history.dart';
-import 'screens/historical_statistics.dart';
 import 'screens/record_mouth_opening.dart';
-import 'screens/ble.dart';
 import 'widgets/footer.dart' as footer_widget;
 import 'services/session_data_service.dart';
 import 'main.dart';
