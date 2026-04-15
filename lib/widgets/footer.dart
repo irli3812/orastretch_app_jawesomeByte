@@ -132,7 +132,7 @@ class _FooterState extends State<Footer> with TickerProviderStateMixin {
                   animation: _pulseAnimation,
                   builder: (context, child) {
                     return Transform.scale(
-                      scale: (_session.isRunning || _hasStartedSession)
+                      scale: isRunning
                           ? 1.0
                           : _pulseAnimation.value,
                       child: child,
