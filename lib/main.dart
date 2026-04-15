@@ -158,6 +158,10 @@ class BatteryStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('appBox');
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final buttonSize = isMobile ? 44.0 : 48.0;
+    final iconSize = isMobile ? 22.0 : 24.0;
 
     return ValueListenableBuilder(
       valueListenable: box.listenable(keys: ['batteryPercent']),
@@ -165,36 +169,87 @@ class BatteryStatus extends StatelessWidget {
         final double battery =
             (box.get('batteryPercent', defaultValue: 100.0) as num).toDouble();
 
-        IconData icon;
-
-        if (battery > 75) {
-          icon = Icons.battery_full;
-        } else if (battery > 50) {
-          icon = Icons.battery_5_bar;
-        } else if (battery > 25) {
-          icon = Icons.battery_3_bar;
-        } else {
-          icon = Icons.battery_1_bar;
-        }
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: Colors.white),
-            const SizedBox(width: 4),
-            Text(
-              "${battery.toStringAsFixed(0)}%",
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+        return SizedBox(
+          width: buttonSize,
+          height: buttonSize,
+          child: CustomPaint(
+            painter: _BatteryPainter(
+              batteryPercent: battery,
+              iconSize: iconSize,
             ),
-          ],
+          ),
         );
       },
     );
   }
+}
+
+class _BatteryPainter extends CustomPainter {
+  final double batteryPercent;
+  final double iconSize;
+
+  _BatteryPainter({
+    required this.batteryPercent,
+    required this.iconSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    
+    // Battery body (outline)
+    final bodyWidth = iconSize * 0.75;
+    final bodyHeight = iconSize * 0.4;
+    final bodyRect = Rect.fromCenter(
+      center: center,
+      width: bodyWidth,
+      height: bodyHeight,
+    );
+    
+    // Draw outline
+    final outlinePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bodyRect, Radius.circular(2)),
+      outlinePaint,
+    );
+    
+    // Draw battery terminal (nub)
+    final terminalWidth = bodyWidth * 0.2;
+    final terminalHeight = bodyHeight * 0.4;
+    final terminalRect = Rect.fromCenter(
+      center: Offset(bodyRect.right + terminalWidth / 2, center.dy),
+      width: terminalWidth,
+      height: terminalHeight,
+    );
+    
+    canvas.drawRect(terminalRect, outlinePaint);
+    
+    // Draw fill based on battery percentage (white)
+    final fillWidth = bodyWidth * (batteryPercent / 100);
+    final fillRect = Rect.fromLTWH(
+      bodyRect.left,
+      bodyRect.top,
+      fillWidth,
+      bodyRect.height,
+    );
+    
+    final fillPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(fillRect, Radius.circular(1.5)),
+      fillPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BatteryPainter oldDelegate) =>
+      oldDelegate.batteryPercent != batteryPercent;
 }
 
 class MyApp extends StatefulWidget {
