@@ -105,9 +105,15 @@ class EndSessionPopup extends StatelessWidget {
                     'Session Summary',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Return to Recording'),
+                  Flexible(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Return to Recording',
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -154,61 +160,57 @@ class EndSessionPopup extends StatelessWidget {
 
             const Divider(height: 1),
 
-            SizedBox(
-              height: 64,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: Material(
-                      color: deleteColor,
-                      child: InkWell(
-                        onTap: () => _deleteSession(context),
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.delete, color: Colors.black, size: 22),
-                              SizedBox(width: 8),
-                              Text(
-                                'Delete Session',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
+                  ElevatedButton(
+                    onPressed: () => _deleteSession(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: deleteColor,
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(20),
+                      elevation: 4,
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.delete, size: 28),
+                        SizedBox(height: 4),
+                        Text(
+                          'Delete',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                  Container(width: 1, color: Colors.white),
-                  Expanded(
-                    child: Material(
-                      color: saveColor,
-                      child: InkWell(
-                        onTap: () => _saveSession(context),
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.save, color: Colors.black, size: 22),
-                              SizedBox(width: 8),
-                              Text(
-                                'Save Session',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
+                  ElevatedButton(
+                    onPressed: () => _saveSession(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: saveColor,
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(20),
+                      elevation: 4,
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.save, size: 28),
+                        SizedBox(height: 4),
+                        Text(
+                          'Save',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
