@@ -6,3 +6,6 @@ How to download the app onto a mobile Android device:
 3. Connect the device via data cable
 4. In the terminal, run the command: "flutter clean; flutter pub get; flutter run"
 5. Ensure it deploys to the correct device
+
+How to download the app onto a mobile iOS device:
+1. To be written 
